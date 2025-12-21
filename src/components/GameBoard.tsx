@@ -6,9 +6,40 @@ interface GameBoardProps {
     gameState: GameState;
     onDraw: () => void;
     onCapture: (cardId: string, attackType: AttackType, cardIdsToPlay: string[]) => void;
+    onPenaltyDiscard: (cardId: string) => void;
 }
 
-export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCapture }) => {
+const DiceFace: React.FC<{ value: number }> = ({ value }) => {
+    // Basic CSS dice face
+    // Dragonwood Dice: 1, 2, 2, 3, 3, 4. Result is pre-calculated engine-side as 1-4.
+    // We just render pips for the value.
+    const dotMap: Record<number, number[]> = {
+        1: [4],
+        2: [0, 8],
+        3: [0, 4, 8],
+        4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8],
+        6: [0, 2, 3, 5, 6, 8] // Standard 6 just in case
+    };
+
+    return (
+        <div style={{
+            width: '40px', height: '40px', background: 'white', borderRadius: '8px',
+            boxShadow: '2px 2px 5px rgba(0,0,0,0.3)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+            gridTemplateRows: 'repeat(3, 1fr)', padding: '4px', boxSizing: 'border-box', border: '1px solid #bdc3c7'
+        }}>
+            {Array.from({ length: 9 }).map((_, i) => (
+                <div key={i} style={{
+                    background: dotMap[value]?.includes(i) ? '#e74c3c' : 'transparent',
+                    borderRadius: '50%',
+                    margin: '1px'
+                }} />
+            ))}
+        </div>
+    );
+};
+
+export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCapture, onPenaltyDiscard }) => {
     const player = gameState.players[gameState.currentPlayerIndex];
     const isMyTurn = !player.isBot; // Assuming index 0 is human usually, or check ID
 
@@ -20,6 +51,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             setSelectedHandCards(selectedHandCards.filter(c => c !== id));
         } else {
             setSelectedHandCards([...selectedHandCards, id]);
+        }
+    };
+
+    const handleDiscard = () => {
+        if (selectedHandCards.length === 1) {
+            onPenaltyDiscard(selectedHandCards[0]);
+            setSelectedHandCards([]);
         }
     };
 
@@ -35,11 +73,47 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     return (
         <div style={{ padding: '20px', width: '100%', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
 
-            {/* Header / Info */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h1>Dragonwood Digital</h1>
-                <div style={{ background: '#34495e', padding: '10px', borderRadius: '8px' }}>
-                    Phase: {gameState.phase.toUpperCase()} | Turn: {player.name}
+            {/* Scoreboard / Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: '#2c3e50', color: 'white', padding: '15px', borderRadius: '12px' }}>
+                <div>
+                    <h1 style={{ margin: '0 0 10px 0', fontSize: '1.5em' }}>Dragonwood</h1>
+                    <div style={{ fontSize: '0.9em', opacity: 0.8 }}>
+                        Phase: {gameState.phase.toUpperCase()} | Turn: {player.name}
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '40px' }}>
+                    {gameState.players.map(p => {
+                        const score = p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0);
+
+                        // Calculate bonuses for display (duplicated logic for UI safely)
+                        const bonuses = { strike: 0, stomp: 0, scream: 0 };
+                        let hasHoneyPot = false;
+                        p.capturedCards.forEach(c => {
+                            if (c.type === 'enhancement') {
+                                if (c.name === 'Silver Sword') bonuses.strike += 2;
+                                if (c.name === 'Magical Boots') bonuses.stomp += 2;
+                                if (c.name === 'Cloak of Darkness') bonuses.scream += 2;
+                                if (c.name === 'Honey Pot') hasHoneyPot = true;
+                            }
+                        });
+
+                        return (
+                            <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <div style={{ fontWeight: 'bold' }}>{p.name} {p.isBot ? '🤖' : '👤'}</div>
+                                <div style={{ fontSize: '1.2em', color: '#f1c40f' }}>🏆 {score} VP</div>
+                                <div style={{ fontSize: '0.8em', display: 'flex', gap: '5px' }}>
+                                    {bonuses.strike > 0 && <span title="Strike Bonus">⚔️+{bonuses.strike}</span>}
+                                    {bonuses.stomp > 0 && <span title="Stomp Bonus">🦶+{bonuses.stomp}</span>}
+                                    {bonuses.scream > 0 && <span title="Scream Bonus">😱+{bonuses.scream}</span>}
+                                    {hasHoneyPot && <span title="Re-roll 1s">🍯</span>}
+                                </div>
+                                <div style={{ fontSize: '0.8em', maxWidth: '200px', textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.7 }}>
+                                    Captured: {p.capturedCards.map(c => c.name).join(', ') || 'None'}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
 
@@ -67,23 +141,50 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
             {/* Middle Area: Dice & Logs */}
             <section style={{ display: 'flex', gap: '20px', minHeight: '100px' }}>
-                <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', overflowY: 'auto', maxHeight: '150px' }}>
+                <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', overflowY: 'auto', height: '200px' }}>
                     <strong>Game Log:</strong>
                     <div style={{ display: 'flex', flexDirection: 'column-reverse' }}>
-                        {gameState.turnLog.slice(-5).reverse().map((log, i) => (
+                        {[...gameState.turnLog].reverse().map((log, i) => (
                             <div key={i} style={{ fontSize: '0.9em', opacity: 0.8 }}>{log}</div>
                         ))}
                     </div>
                 </div>
 
-                {gameState.diceRollConfig.pending === false && gameState.diceRollConfig.results.length > 0 && (
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#e74c3c', borderRadius: '8px' }}>
-                        <h3>Roll Result</h3>
-                        <div style={{ fontSize: '2em' }}>
-                            {gameState.diceRollConfig.results.join(' + ')} = {gameState.diceRollConfig.results.reduce((a, b) => a + b, 0)}
+                <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: gameState.diceRollConfig.success === true ? '#27ae60' : (gameState.diceRollConfig.success === false ? '#c0392b' : (gameState.diceRollConfig.pending ? '#f1c40f' : '#95a5a6')),
+                    borderRadius: '8px',
+                    color: 'white',
+                    transition: 'background 0.3s ease'
+                }}>
+                    <h3 style={{ margin: '0 0 10px 0' }}>
+                        {gameState.diceRollConfig.pending ? 'Rolling...' : (gameState.diceRollConfig.success === true ? 'Success!' : (gameState.diceRollConfig.success === false ? 'Failed!' : (gameState.diceRollConfig.results.length > 0 ? 'Roll Result' : 'Ready to Roll')))}
+                    </h3>
+                    {gameState.diceRollConfig.results.length > 0 ? (
+                        <>
+                            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                {gameState.diceRollConfig.results.map((val, i) => (
+                                    <DiceFace key={i} value={val} />
+                                ))}
+                            </div>
+                            <div style={{ fontSize: '1.5em', fontWeight: 'bold' }}>
+                                Total: {gameState.diceRollConfig.total ?? gameState.diceRollConfig.results.reduce((a, b) => a + b, 0)}
+                                {gameState.diceRollConfig.bonus ? <span style={{ fontSize: '0.6em', color: '#f1c40f', marginLeft: '5px' }}>(+{gameState.diceRollConfig.bonus})</span> : ''}
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ opacity: 0.7, fontStyle: 'italic' }}>Select cards and action to roll</div>
+                    )}
+                    {gameState.diceRollConfig.required !== undefined && (
+                        <div style={{ fontSize: '1em', marginTop: '5px', opacity: 0.9 }}>
+                            Needed: {gameState.diceRollConfig.required}
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </section>
 
             {/* Player Area */}
@@ -91,14 +192,35 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <h3>Your Hand ({gameState.players[0].hand.length})</h3>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={onDraw} disabled={!isMyTurn || gameState.phase !== 'action'}>Draw Card</button>
-                        <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0}>Strike (Straight)</button>
-                        <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0}>Stomp (Flush)</button>
-                        <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0}>Scream (Kind)</button>
+                        {gameState.phase === 'penalty_discard' ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span style={{ color: '#c0392b', fontWeight: 'bold' }}>Capture Failed! Select 1 card to discard:</span>
+                                <button
+                                    onClick={handleDiscard}
+                                    disabled={selectedHandCards.length !== 1}
+                                    style={{ background: '#c0392b', color: 'white' }}
+                                >
+                                    🗑️ Discard Selected
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <button onClick={onDraw} disabled={!isMyTurn || gameState.phase !== 'action'}>🃏 Draw Card</button>
+                                <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0}>⚔️ Strike (Straight)</button>
+                                <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0}>🦶 Stomp (Flush)</button>
+                                <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0}>😱 Scream (Kind)</button>
+                            </>
+                        )}
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '10px' }}>
-                    {gameState.players[0].hand.map(card => (
+                    {[...gameState.players[0].hand].sort((a, b) => {
+                        if (a.type !== 'adventurer' || b.type !== 'adventurer') return 0; // Keep special cards as is or move to end
+                        const suits = ['red', 'orange', 'yellow', 'green', 'blue'];
+                        const suitDiff = suits.indexOf(a.suit) - suits.indexOf(b.suit);
+                        if (suitDiff !== 0) return suitDiff;
+                        return a.value - b.value;
+                    }).map(card => (
                         <CardComponent
                             key={card.id}
                             card={card}

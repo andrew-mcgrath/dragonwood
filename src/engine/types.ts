@@ -66,7 +66,7 @@ export interface Player {
   isBot: boolean;
 }
 
-export type GamePhase = 'draw' | 'action' | 'capture_attempt' | 'end_turn' | 'game_over';
+export type GamePhase = 'draw' | 'action' | 'capture_attempt' | 'penalty_discard' | 'end_turn' | 'game_over';
 
 export interface GameState {
   players: Player[];
@@ -79,6 +79,10 @@ export interface GameState {
     count: number;
     pending: boolean;
     results: number[];
+    bonus?: number;
+    total?: number;
+    required?: number;
+    success?: boolean;
   };
   phase: GamePhase;
   turnLog: string[];

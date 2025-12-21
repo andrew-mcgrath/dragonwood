@@ -1,14 +1,30 @@
 import { createAdventurerDeck, createDragonwoodDeck } from './DeckManager';
 import { rollDice } from './Dice';
-import type { GameState, Player, PlayerCard, DragonwoodCard, Creature, Enhancement, AttackType, GamePhase } from './types';
+import type { GameState, Player, PlayerCard, DragonwoodCard, Creature, AttackType } from './types';
 
 export class GameEngine {
     state: GameState;
+
+    private listeners: (() => void)[] = [];
 
     constructor() {
         this.state = this.initializeGame();
     }
 
+    public subscribe(listener: () => void) {
+        this.listeners.push(listener);
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
+    }
+
+    private notify() {
+        this.listeners.forEach(l => l());
+    }
+
+    public getState(): GameState {
+        return this.state;
+    }
     private initializeGame(): GameState {
         const adventurerDeck = createAdventurerDeck();
         const dragonwoodDeck = createDragonwoodDeck();
@@ -31,10 +47,27 @@ export class GameEngine {
             isBot: true
         };
 
-        // Deal 5 cards to each player
+
+
+        const tempDiscard: PlayerCard[] = [];
+
+        // Helper to deal safe
         for (let i = 0; i < 5; i++) {
-            player1.hand.push(adventurerDeck.pop()!); // Assume deck sufficient
-            player2.hand.push(adventurerDeck.pop()!);
+            // Player 1
+            let c = adventurerDeck.pop();
+            while (c && c.type === 'lucky_ladybug') {
+                tempDiscard.push(c);
+                c = adventurerDeck.pop();
+            }
+            if (c) player1.hand.push(c);
+
+            // Player 2
+            c = adventurerDeck.pop();
+            while (c && c.type === 'lucky_ladybug') {
+                tempDiscard.push(c);
+                c = adventurerDeck.pop();
+            }
+            if (c) player2.hand.push(c);
         }
 
         // Deal 5 landscape cards
@@ -49,7 +82,7 @@ export class GameEngine {
             players: [player1, player2],
             currentPlayerIndex: 0,
             adventurerDeck,
-            discardPile: [],
+            discardPile: tempDiscard,
             dragonwoodDeck,
             landscape,
             diceRollConfig: { count: 0, pending: false, results: [] },
@@ -58,9 +91,7 @@ export class GameEngine {
         };
     }
 
-    public getState(): GameState {
-        return this.state;
-    }
+
 
     public drawCard() {
         if (this.state.phase !== 'action') return;
@@ -68,24 +99,61 @@ export class GameEngine {
         const player = this.state.players[this.state.currentPlayerIndex];
 
         // Draw 1 card
-        // If hand limit (9) reached, must discard - implementing basic hard limit prevention later
-        // For now, allow draw.
+        // If deck is empty, reshuffle discard pile
+        if (this.state.adventurerDeck.length === 0) {
+            if (this.state.discardPile.length === 0) {
+                // Game Over condition or just pass turn?
+                // Rule: "The game ends when... the Adventure deck has been gone through twice" (classic rule).
+                // Simpler Rule: If both empty, cannot draw.
+                this.state.turnLog.push("Adventurer Deck is empty!");
+                this.endTurn();
+                return;
+            }
+
+            // Reshuffle
+            this.state.turnLog.push("Reshuffling Discard Pile into Deck...");
+            // Shuffle function is in DeckManager but we can just simplify here or import
+            // ideally use the shuffle utility
+            const newDeck = this.state.discardPile;
+            // Simple shuffle here to avoid circular imports or complex calls if shuffle isn't a method of GameEngine
+            for (let i = newDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+            }
+            this.state.adventurerDeck = newDeck;
+            this.state.discardPile = [];
+        }
 
         const card = this.state.adventurerDeck.pop();
         if (card) {
             // Check for Lucky Ladybug
             if (card.type === 'lucky_ladybug') {
-                this.state.turnLog.push(`${player.name} drew a Lucky Ladybug! Draw 2 more.`);
+                this.state.turnLog.push(`${player.name} drew a Lucky Ladybug! 🐞 Draw 2 more.`);
                 this.state.discardPile.push(card);
 
                 // Draw 2 more
                 for (let i = 0; i < 2; i++) {
+                    if (this.state.adventurerDeck.length === 0) {
+                        if (this.state.discardPile.length > 0) {
+                            this.state.turnLog.push("Reshuffling for extra draw...");
+                            const newDeck = this.state.discardPile;
+                            for (let j = newDeck.length - 1; j > 0; j--) {
+                                const k = Math.floor(Math.random() * (j + 1));
+                                [newDeck[j], newDeck[k]] = [newDeck[k], newDeck[j]];
+                            }
+                            this.state.adventurerDeck = newDeck;
+                            this.state.discardPile = [];
+                        } else {
+                            break; // No cards left to draw
+                        }
+                    }
                     const extra = this.state.adventurerDeck.pop();
                     if (extra) {
                         player.hand.push(extra);
                         this.state.turnLog.push(`${player.name} drew ${extra.type === 'adventurer' ? extra.value + ' ' + extra.suit : 'another ladybug'}`);
                     }
                 }
+                this.state.turnLog.push(`${player.name} drew a card.`);
             } else {
                 player.hand.push(card);
                 this.state.turnLog.push(`${player.name} drew a card.`);
@@ -155,14 +223,6 @@ export class GameEngine {
             results: []
         };
 
-        // Execute Roll immediately for simplicity
-        const results = rollDice(diceCount);
-        this.state.diceRollConfig.results = results;
-        this.state.diceRollConfig.pending = false;
-
-        const total = results.reduce((a, b) => a + b, 0);
-        this.state.turnLog.push(`${player.name} rolled ${results.join(', ')} (Total: ${total}) for ${attackType} on ${targetCard.name}`);
-
         // Determine Success
         const required = (targetCard as Creature).captureCost?.[attackType] || 0; // Handle non-creatures?
         // Enhancements also have cost
@@ -170,6 +230,51 @@ export class GameEngine {
         // Check enhancements player owns
         // e.g. +2 to strike
         // For now basics only.
+
+        // Calculate Bonuses
+        const bonuses = this.calculateBonuses(player);
+        const bonusValue = bonuses[attackType];
+
+        // Execute Roll immediately for simplicity
+        let results = rollDice(diceCount);
+
+        // Honey Pot Mechanic: Re-roll 1s (once)
+        // Check if player has Honey Pot
+        const hasHoneyPot = player.capturedCards.some(c => c.name === 'Honey Pot');
+        if (hasHoneyPot) {
+            const initialOnes = results.filter(r => r === 1).length;
+            if (initialOnes > 0) {
+                this.state.turnLog.push(`${player.name} uses Honey Pot to re-roll ${initialOnes} die(dice)! 🍯`); // Add emoji or clear text
+                results = results.map(r => {
+                    if (r === 1) {
+                        return rollDice(1)[0];
+                    }
+                    return r;
+                });
+            }
+        }
+
+        const rollTotal = results.reduce((a, b) => a + b, 0);
+        const total = rollTotal + bonusValue;
+
+        this.state.diceRollConfig.results = results;
+        this.state.diceRollConfig.pending = false;
+        this.state.diceRollConfig.required = required;
+        this.state.diceRollConfig.bonus = bonusValue;
+        this.state.diceRollConfig.total = total;
+
+        let logMsg = `${player.name} rolled ${results.join(', ')} (Sum: ${rollTotal})`;
+        if (bonusValue > 0) {
+            logMsg += ` + Bonus: ${bonusValue} = Total: ${total}`;
+        } else {
+            logMsg += ` = Total: ${total}`;
+        }
+        logMsg += ` for ${attackType} on ${targetCard.name}`;
+
+        this.state.turnLog.push(logMsg);
+
+        // Populate success
+        this.state.diceRollConfig.success = total >= required;
 
         if (total >= required) {
             // Success
@@ -185,27 +290,41 @@ export class GameEngine {
             // Discard played cards
             player.hand = player.hand.filter(c => !cardIdsToPlay.includes(c.id));
             this.state.discardPile.push(...cardsToPlay);
+            this.endTurn();
         } else {
             // Fail
             this.state.turnLog.push("Capture Failed!");
             // Penalty: Discard 1 card (Adventurer Card)
-            // Implementation: Ideally let user choose. For MVP, discard random or last played.
-            // Rule: "If you fail, you must discard 1 Adventurer card from your hand as a penalty."
-            if (player.hand.length > 0) {
-                // Discard the first card played in the failed attempt (simple rule interpretation or just first in hand)
-                // Actually the played cards return to hand, AND you discard one.
-                // Correct Rule: "If you fail, take the cards you played back into your hand. Then you must discard one Adventurer card from your hand as a penalty."
+            // Rule: "If you fail, take the cards you played back into your hand. Then you must discard one Adventurer card from your hand as a penalty."
 
-                // So we don't discard the used cards yet.
-                // We need to implement a 'penalty' phase or just auto-discard.
-                // For MVP auto-discard first card of hand.
-                const penaltyCard = player.hand.pop();
-                if (penaltyCard) {
-                    this.state.discardPile.push(penaltyCard);
-                    this.state.turnLog.push(`${player.name} discards a card as penalty.`);
-                }
+            if (player.hand.length > 0) {
+                // Change phase to penalty_discard so user must choose
+                this.state.phase = 'penalty_discard';
+                this.state.turnLog.push(`${player.name} must discard a card as penalty.`);
+                this.notify();
+                // Do NOT end turn yet
+            } else {
+                // Empty hand, nothing to discard? Rare case (played cards returned to hand, so hand shouldn't be empty unless played 0 cards?)
+                // Played cards ARE returned to hand strictly speaking (they never left really, we just selected them).
+                this.endTurn();
             }
         }
+    }
+
+    public resolvePenaltyDiscard(cardId: string) {
+        if (this.state.phase !== 'penalty_discard') return;
+
+        const player = this.state.players[this.state.currentPlayerIndex];
+        const cardIndex = player.hand.findIndex(c => c.id === cardId);
+
+        if (cardIndex === -1) {
+            throw new Error("Card not found in hand");
+        }
+
+        const card = player.hand[cardIndex];
+        player.hand.splice(cardIndex, 1);
+        this.state.discardPile.push(card);
+        this.state.turnLog.push(`${player.name} discarded a penalty card.`);
 
         this.endTurn();
     }
@@ -220,14 +339,29 @@ export class GameEngine {
 
         // For now, simple standard turn rotation.
 
+        this.notify(); // Update UI for new player turn
+
         if (this.state.players[this.state.currentPlayerIndex].isBot) {
             this.runBotTurn();
         }
     }
 
+    public calculateBonuses(player: Player): { strike: number, stomp: number, scream: number } {
+        const bonuses = { strike: 0, stomp: 0, scream: 0 };
+        for (const card of player.capturedCards) {
+            if (card.type === 'enhancement') {
+                if (card.name === 'Silver Sword') bonuses.strike += 2;
+                if (card.name === 'Magical Boots') bonuses.stomp += 2;
+                if (card.name === 'Cloak of Darkness') bonuses.scream += 2;
+            }
+        }
+        return bonuses;
+    }
+
     private runBotTurn() {
         // Super simple bot: Attempts to draw always
         this.state.turnLog.push("Bot is thinking...");
+        this.notify();
         setTimeout(() => { // Simulate think time not real async, just logical separation? 
             // Actually in React state update must be atomic. 
             // So we just process directly.

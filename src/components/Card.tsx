@@ -30,9 +30,21 @@ export const CardComponent: React.FC<CardProps> = ({ card, isSelected, onClick }
         );
     } else if (card.type === 'lucky_ladybug') {
         bgStyle = {
-            border: '4px solid pink'
+            border: '4px solid pink',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            textAlign: 'center',
+            padding: '5px'
         };
-        content = <div>🐞 Ladybug</div>;
+        content = (
+            <>
+                <div style={{ fontSize: '2em' }}>🐞</div>
+                <div style={{ fontWeight: 'bold' }}>Lucky Ladybug</div>
+                <div style={{ fontSize: '0.8em', marginTop: '5px' }}>Discard immediately to draw 2 cards</div>
+            </>
+        );
     } else if (card.type === 'creature') {
         const creat = card as Creature;
         bgStyle = {

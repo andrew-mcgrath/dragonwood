@@ -23,8 +23,9 @@ function App() {
   const refresh = () => setTick(t => t + 1);
 
   useEffect(() => {
-    // Simple poller or subscription could go here if engine had events
-    // For now, we manually refresh on actions.
+    // Subscribe to engine updates
+    const unsubscribe = gameEngine.subscribe(refresh);
+    return () => unsubscribe();
   }, []);
 
   const handleDraw = () => {
@@ -36,6 +37,15 @@ function App() {
     try {
       gameEngine.declareCapture(cardId, attackType, cardIdsToPlay);
       refresh();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const handlePenaltyDiscard = (cardId: string) => {
+    try {
+      gameEngine.resolvePenaltyDiscard(cardId);
+      refresh(); // Refresh after state change
     } catch (e: any) {
       alert(e.message);
     }
@@ -54,6 +64,7 @@ function App() {
         gameState={gameEngine.getState()}
         onDraw={handleDraw}
         onCapture={handleCapture}
+        onPenaltyDiscard={handlePenaltyDiscard}
       />
     </div>
   );
