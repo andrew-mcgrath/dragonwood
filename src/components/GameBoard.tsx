@@ -256,7 +256,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                 <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '10px' }}>
                     {[...gameState.players[0].hand].sort((a, b) => {
                         if (a.type !== 'adventurer' || b.type !== 'adventurer') return 0; // Keep special cards as is or move to end
-                        const suits = ['red', 'orange', 'yellow', 'green', 'blue'];
+                        const suits = ['red', 'orange', 'purple', 'green', 'blue'];
                         const suitDiff = suits.indexOf(a.suit) - suits.indexOf(b.suit);
                         if (suitDiff !== 0) return suitDiff;
                         return a.value - b.value;

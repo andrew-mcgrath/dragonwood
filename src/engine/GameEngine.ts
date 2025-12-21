@@ -409,10 +409,9 @@ export class GameEngine {
         // Super simple bot: Attempts to draw always
         this.state.turnLog.push("Bot is thinking...");
         this.notify();
-        setTimeout(() => { // Simulate think time not real async, just logical separation? 
-            // Actually in React state update must be atomic. 
-            // So we just process directly.
+        setTimeout(() => {
+            // Simulate think time 
             this.drawCard();
-        }, 0);
+        }, 1500);
     }
 }
