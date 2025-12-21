@@ -241,7 +241,9 @@ export class GameEngine {
         this.state.diceRollConfig = {
             count: diceCount,
             pending: true,
-            results: []
+            results: [],
+            player: { name: player.name, isBot: player.isBot },
+            targetCardName: targetCard.name
         };
 
         // Determine Success
@@ -406,12 +408,134 @@ export class GameEngine {
     }
 
     private runBotTurn() {
-        // Super simple bot: Attempts to draw always
         this.state.turnLog.push("Bot is thinking...");
         this.notify();
+
         setTimeout(() => {
-            // Simulate think time 
-            this.drawCard();
+            const bot = this.state.players[this.state.currentPlayerIndex];
+            const landscape = this.state.landscape;
+
+            // 1. Analyze Hand
+            const adventurers = bot.hand.filter(c => c.type === 'adventurer') as unknown as import('./types').AdventurerCard[];
+
+            // Group by Suit (Stomp/Flush)
+            const bySuit: Record<string, import('./types').AdventurerCard[]> = {};
+            // Group by Value (Scream/Kind)
+            const byValue: Record<number, import('./types').AdventurerCard[]> = {};
+
+            adventurers.forEach(c => {
+                if (!bySuit[c.suit]) bySuit[c.suit] = [];
+                bySuit[c.suit].push(c);
+
+                if (!byValue[c.value]) byValue[c.value] = [];
+                byValue[c.value].push(c);
+            });
+
+            // Find Straights (Strike) - tricky, just find longest runs
+            adventurers.sort((a, b) => a.value - b.value);
+            const runs: import('./types').AdventurerCard[][] = [];
+            let currentRun: import('./types').AdventurerCard[] = [];
+            for (let i = 0; i < adventurers.length; i++) {
+                if (currentRun.length === 0) {
+                    currentRun.push(adventurers[i]);
+                } else {
+                    const last = currentRun[currentRun.length - 1];
+                    if (adventurers[i].value === last.value + 1) {
+                        currentRun.push(adventurers[i]);
+                    } else if (adventurers[i].value !== last.value) { // Ignore duplicates for run
+                        runs.push([...currentRun]);
+                        currentRun = [adventurers[i]];
+                    }
+                }
+            }
+            if (currentRun.length > 0) runs.push(currentRun);
+
+
+            // 2. Evaluate Opportunities
+            let bestMove: { cardId: string, type: AttackType, cards: string[] } | null = null;
+            let bestScore = -1;
+
+            for (const target of landscape) {
+                if (target.type !== 'creature' && target.type !== 'enhancement') continue;
+
+                // Costs
+                const cost = target.captureCost;
+
+                // Check Stomp (Flush)
+                for (const suit in bySuit) {
+                    const hand = bySuit[suit];
+                    const diceCount = hand.length; // + bonuses (skip for MVP bot)
+                    const avgRoll = diceCount * 2.5;
+                    if (avgRoll >= cost.stomp) {
+                        // Valid-ish candidate
+                        const score = ('victoryPoints' in target ? target.victoryPoints : 0) + (hand.length * 0.1); // Prioritize VP, then generic efficiency
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = { cardId: target.id, type: 'stomp', cards: hand.map(c => c.id) };
+                        }
+                    }
+                }
+
+                // Check Scream (Kind)
+                for (const val in byValue) {
+                    const hand = byValue[val];
+                    const diceCount = hand.length;
+                    const avgRoll = diceCount * 2.5;
+                    if (avgRoll >= cost.scream) {
+                        const score = ('victoryPoints' in target ? target.victoryPoints : 0) + (hand.length * 0.1);
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = { cardId: target.id, type: 'scream', cards: hand.map(c => c.id) };
+                        }
+                    }
+                }
+
+                // Check Strike (Straight)
+                for (const run of runs) {
+                    const diceCount = run.length;
+                    const avgRoll = diceCount * 2.5;
+                    if (avgRoll >= cost.strike) {
+                        const score = ('victoryPoints' in target ? target.victoryPoints : 0) + (run.length * 0.1);
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = { cardId: target.id, type: 'strike', cards: run.map(c => c.id) };
+                        }
+                    }
+                }
+            }
+
+            // 3. Act
+            if (bestMove) {
+                const targetName = landscape.find(c => c.id === bestMove!.cardId)?.name;
+                this.state.turnLog.push(`Bot attacks ${targetName} with ${bestMove.type} ! 🤖`);
+
+                try {
+                    this.declareCapture(bestMove.cardId, bestMove.type, bestMove.cards);
+
+                    // Check if capture failed and we are in penalty phase
+                    if (this.state.phase === 'penalty_discard') {
+                        this.state.turnLog.push("Bot failed capture! Choosing card to discard...");
+                        this.notify();
+
+                        setTimeout(() => {
+                            // Simple bot logic: discard first card in hand
+                            const botPlayer = this.state.players[this.state.currentPlayerIndex];
+                            if (botPlayer.hand.length > 0) {
+                                this.resolvePenaltyDiscard(botPlayer.hand[0].id);
+                            } else {
+                                // Fallback if no cards to discard (shouldn't happen in penalty phase normally)
+                                this.endTurn()
+                            }
+                        }, 1000);
+                    }
+                } catch (e) {
+                    console.error("Bot failed capture execution", e);
+                    this.drawCard(); // Fallback
+                }
+            } else {
+                this.drawCard();
+            }
+
         }, 1500);
     }
 }

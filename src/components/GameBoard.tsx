@@ -200,6 +200,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                     transition: 'background 0.3s ease'
                 }}>
                     <h3 style={{ margin: '0 0 10px 0' }}>
+                        {gameState.diceRollConfig.player ?
+                            `${gameState.diceRollConfig.player.name} ${gameState.diceRollConfig.player.isBot ? '🤖' : '👤'} `
+                            : ''}
+                        {gameState.diceRollConfig.targetCardName ? `vs ${gameState.diceRollConfig.targetCardName}: ` : ''}
                         {gameState.diceRollConfig.pending ? 'Rolling...' : (gameState.diceRollConfig.success === true ? 'Success!' : (gameState.diceRollConfig.success === false ? 'Failed!' : (gameState.diceRollConfig.results.length > 0 ? 'Roll Result' : 'Ready to Roll')))}
                     </h3>
                     {gameState.diceRollConfig.results.length > 0 ? (
@@ -230,7 +234,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <h3>Your Hand ({gameState.players[0].hand.length})</h3>
                     <div style={{ display: 'flex', gap: '10px' }}>
-                        {gameState.phase === 'penalty_discard' ? (
+                        {gameState.phase === 'penalty_discard' && isMyTurn ? (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <span style={{ color: '#c0392b', fontWeight: 'bold' }}>Capture Failed! Select 1 card to discard:</span>
                                 <button

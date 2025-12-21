@@ -83,6 +83,8 @@ export interface GameState {
     total?: number;
     required?: number;
     success?: boolean;
+    player?: { name: string, isBot: boolean };
+    targetCardName?: string;
   };
   phase: GamePhase;
   turnLog: string[];
