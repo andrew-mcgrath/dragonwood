@@ -87,9 +87,12 @@ export const SplashScreen: React.FC<SplashProps> = ({ onStartGame }) => {
                             fontWeight: 'bold'
                         }}
                     >
-                        Start Adventure 🚀
+                        ⚔️ Start Adventure ⚔️
                     </button>
                 </form>
+            </div>
+            <div style={{ marginTop: '20px', fontSize: '0.8em', opacity: 0.7, textAlign: 'center' }}>
+                This project is for educational/personal use. Dragonwood is a trademark of Gamewright.
             </div>
         </div>
     );

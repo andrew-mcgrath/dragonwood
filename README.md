@@ -2,9 +2,14 @@
 
 A web-based implementation of the popular Dragonwood board game, built with React, TypeScript, and Vite.
 
+This application was built over the course of an afternoon utilizing [Google Antigravity](https://antigravity.google/).
+
 ## Overview
 
 Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dice, which you use to roll against your foes. Stomp on some Fire Ants, scream at a Grumpy Troll, or strike at a menacing Dragon. The goal is to capture creatures and enhancements to earn the most Victory Points.
+
+![Dragonwood Splash](docs/img/screenshots/splash.png)
+![Dragonwood Gameplay](docs/img/screenshots/gameplay.png)
 
 ## Features implemented
 

@@ -259,10 +259,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             <div style={{ fontWeight: 'bold', color: '#f1c40f' }}>GAME OVER</div>
                         ) : (
                             <>
-                                <button onClick={onDraw} disabled={!isMyTurn || gameState.phase !== 'action'}>🃏 Draw Card</button>
-                                <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0}>⚔️ Strike (Straight)</button>
-                                <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0}>🦶 Stomp (Flush)</button>
-                                <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0}>😱 Scream (Kind)</button>
+                                <button onClick={onDraw} disabled={!isMyTurn || gameState.phase !== 'action'} title="Draw 1 card from the deck">🃏 Draw Card</button>
+                                <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards in numerical order (Straight)">⚔️ Strike (Straight)</button>
+                                <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same suit (Flush)">🦶 Stomp (Flush)</button>
+                                <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same value (Kind)">😱 Scream (Kind)</button>
                             </>
                         )}
                     </div>
