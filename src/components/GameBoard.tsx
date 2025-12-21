@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { GameState, AttackType } from '../engine/types';
 import { CardComponent } from './Card';
 
@@ -11,6 +11,7 @@ interface GameBoardProps {
 }
 
 const DiceFace: React.FC<{ value: number }> = ({ value }) => {
+    // ... (DiceFace implementation)
     // Basic CSS dice face
     // Dragonwood Dice: 1, 2, 2, 3, 3, 4. Result is pre-calculated engine-side as 1-4.
     // We just render pips for the value.
@@ -43,6 +44,14 @@ const DiceFace: React.FC<{ value: number }> = ({ value }) => {
 export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCapture, onPenaltyDiscard, onRenamePlayer }) => {
     const player = gameState.players[gameState.currentPlayerIndex];
     const isMyTurn = !player.isBot; // Assuming index 0 is human usually, or check ID
+
+    const logEndRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (logEndRef.current) {
+            logEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [gameState.turnLog.length]);
 
     const [selectedHandCards, setSelectedHandCards] = useState<string[]>([]);
     const [selectedLandscapeCard, setSelectedLandscapeCard] = useState<string | null>(null);
@@ -181,10 +190,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             <section style={{ display: 'flex', gap: '20px', minHeight: '100px' }}>
                 <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', overflowY: 'auto', height: '200px' }}>
                     <strong>Game Log:</strong>
-                    <div style={{ display: 'flex', flexDirection: 'column-reverse' }}>
-                        {[...gameState.turnLog].reverse().map((log, i) => (
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {gameState.turnLog.map((log, i) => (
                             <div key={i} style={{ fontSize: '0.9em', opacity: 0.8 }}>{log}</div>
                         ))}
+                        <div ref={logEndRef} />
                     </div>
                 </div>
 

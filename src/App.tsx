@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { GameEngine } from './engine/GameEngine';
 import { GameBoard } from './components/GameBoard';
+import { SplashScreen } from './components/SplashScreen';
 import './index.css';
 
 // Singleton instance for simplicity in this MVP
@@ -16,6 +17,7 @@ try {
 }
 
 function App() {
+  const [gameStarted, setGameStarted] = useState(false);
   // Force update trigger
   const [_, setTick] = useState(0);
 
@@ -27,6 +29,12 @@ function App() {
     const unsubscribe = gameEngine.subscribe(refresh);
     return () => unsubscribe();
   }, []);
+
+  const handleStartGame = (playerName: string) => {
+    gameEngine.setPlayerName('p1', playerName);
+    setGameStarted(true);
+    refresh();
+  };
 
   const handleDraw = () => {
     gameEngine.drawCard();
@@ -61,6 +69,10 @@ function App() {
       <h1>Fatal Error</h1>
       <pre>{JSON.stringify((gameEngine as any).turnLog || gameEngine, null, 2)}</pre>
     </div>;
+  }
+
+  if (!gameStarted) {
+    return <SplashScreen onStartGame={handleStartGame} />;
   }
 
   return (
