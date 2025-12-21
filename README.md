@@ -1,73 +1,76 @@
-# React + TypeScript + Vite
+# Dragonwood (Digital Version) 🐉🌲
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web-based implementation of the popular Dragonwood board game, built with React, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+## Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dice, which you use to roll against your foes. Stomp on some Fire Ants, scream at a Grumpy Troll, or strike at a menacing Dragon. The goal is to capture creatures and enhancements to earn the most Victory Points.
 
-## React Compiler
+## Features implemented
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Core Gameplay Loop**: Draw cards, manage your hand, and capture landscape cards.
+- **Three Attack Types**:
+    - ⚔️ **Strike**: Straight (Sequential numbers, e.g., 1, 2, 3)
+    - 🦶 **Stomp**: Flush (Same color, e.g., all Red)
+    - 😱 **Scream**: Kind (Same value, e.g., all 4s)
+- **Enhancements**: Capture magical items like the *Silver Sword*, *Magical Boots*, *Cloak of Darkness*, and *Honey Pot* to gain permanent bonuses to your rolls.
+- **Special Mechanics**:
+    - **Lucky Ladybug 🐞**: Immediately draw 2 extra cards when drawn.
+    - **Honey Pot 🍯**: Automatically re-rolls any 1s rolled on dice.
+    - **Penalty Discard**: If you fail a capture, you must discard one adventurer card as a penalty.
+- **Bot Opponent 🤖**: Play against a simple AI that draws cards and competes for points (basic implementation).
+- **Dynamic UI**:
+    - Real-time score and bonus display.
+    - Detailed game log with history.
+    - Visual indicators for enhancements and dice rolls.
+    - Player renaming.
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Frontend**: React 19, TypeScript
+- **Build Tool**: Vite
+- **Styling**: CSS (Modules/Inline)
+- **State Management**: Custom GameEngine with Observer pattern
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Prerequisites
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Node.js (Latest LTS recommended)
+- npm
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Installation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+1.  Clone the repository:
+    ```bash
+    git clone git@github.com:andrew-mcgrath/dragonwood.git
+    cd dragonwood
+    ```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+2.  Install dependencies:
+    ```bash
+    npm install
+    ```
+
+3.  Run the development server:
+    ```bash
+    npm run dev
+    ```
+    OR
+    ```bash
+    npx vite
+    ```
+
+4.  Open your browser and navigate to `http://localhost:5173` (or the port shown in your terminal).
+
+## How to Play
+
+1.  **On your turn**, you can either:
+    - **Draw a Card**: Click "Draw Card" to add to your hand.
+    - **Capture**: Select a card in the **Landscape** (top row) and select cards from your **Hand** (bottom row) that form a valid attack (Strike, Stomp, or Scream). Then click the corresponding action button.
+2.  **Dice Roll**: The game calculates your dice count (1 per card + bonuses). If your total roll meets or exceeds the capture cost, you win the card!
+3.  **End of Game**: The game ends when both decks are empty or the Dragonwood deck is empty (Standard rules apply).
+
+## License
+
+This project is for educational/personal use. Dragonwood is a trademark of Gamewright.

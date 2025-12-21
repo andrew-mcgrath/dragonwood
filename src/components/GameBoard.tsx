@@ -94,9 +94,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             {/* Scoreboard / Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: '#2c3e50', color: 'white', padding: '15px', borderRadius: '12px' }}>
                 <div>
-                    <h1 style={{ margin: '0 0 10px 0', fontSize: '1.5em' }}>Dragonwood</h1>
-                    <div style={{ fontSize: '0.9em', opacity: 0.8 }}>
-                        Phase: {gameState.phase.toUpperCase()} | Turn: {player.name}
+                    <h1 style={{ margin: '0 0 10px 0', fontSize: '1.5em' }}>🐉🌲 Dragonwood</h1>
+                    <div style={{ fontSize: '1.1em', fontWeight: 'bold', color: '#f39c12' }}>
+                        Current Turn: {player.name}
                     </div>
                 </div>
 
@@ -132,7 +132,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                     />
                                 ) : (
                                     <div
-                                        style={{ fontWeight: 'bold', cursor: !p.isBot ? 'pointer' : 'default', textDecoration: !p.isBot ? 'underline' : 'none' }}
+                                        style={{ fontWeight: 'bold', fontSize: '1.2em', marginBottom: '5px', cursor: !p.isBot ? 'pointer' : 'default', textDecoration: !p.isBot ? 'underline' : 'none', color: '#ecf0f1' }}
                                         onClick={() => startEditing(p)}
                                         title={!p.isBot ? "Click to rename" : ""}
                                     >
@@ -241,6 +241,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                     🗑️ Discard Selected
                                 </button>
                             </div>
+                        ) : gameState.phase === 'game_over' ? (
+                            <div style={{ fontWeight: 'bold', color: '#f1c40f' }}>GAME OVER</div>
                         ) : (
                             <>
                                 <button onClick={onDraw} disabled={!isMyTurn || gameState.phase !== 'action'}>🃏 Draw Card</button>
@@ -268,6 +270,62 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                     ))}
                 </div>
             </section>
-        </div>
+
+            {/* Game Over Overlay */}
+            {
+                gameState.phase === 'game_over' && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(0,0,0,0.85)', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                    }}>
+                        <div style={{
+                            background: '#ecf0f1', padding: '40px', borderRadius: '20px',
+                            textAlign: 'center', boxShadow: '0 0 30px rgba(230, 126, 34, 0.6)',
+                            maxWidth: '500px', width: '90%'
+                        }}>
+                            <h1 style={{ fontSize: '3em', color: '#e67e22', marginBottom: '20px' }}>🏆 Game Over! 🏆</h1>
+
+                            <div style={{ marginBottom: '30px', textAlign: 'left' }}>
+                                {gameState.players
+                                    .map(p => ({
+                                        ...p,
+                                        score: p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0)
+                                    }))
+                                    .sort((a, b) => b.score - a.score)
+                                    .map((p, i) => (
+                                        <div key={p.id} style={{
+                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                            padding: '10px', background: i === 0 ? '#f1c40f' : 'white',
+                                            borderRadius: '8px', marginBottom: '10px',
+                                            border: i === 0 ? '3px solid #f39c12' : '1px solid #bdc3c7',
+                                            fontWeight: i === 0 ? 'bold' : 'normal'
+                                        }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <span style={{ fontSize: '1.5em' }}>{i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')}</span>
+                                                <span>{p.name}</span>
+                                            </div>
+                                            <span style={{ fontSize: '1.5em' }}>{p.score} VP</span>
+                                        </div>
+                                    ))
+                                }
+                            </div>
+
+                            <button
+                                onClick={() => window.location.reload()}
+                                style={{
+                                    fontSize: '1.2em', padding: '15px 30px',
+                                    background: '#27ae60', color: 'white', border: 'none',
+                                    borderRadius: '50px', cursor: 'pointer',
+                                    boxShadow: '0 5px 15px rgba(39, 174, 96, 0.4)'
+                                }}
+                            >
+                                Play Again 🔄
+                            </button>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };

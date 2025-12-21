@@ -96,7 +96,8 @@ export class GameEngine {
             landscape,
             diceRollConfig: { count: 0, pending: false, results: [] },
             phase: 'action', // Start with action phase
-            turnLog: ['Game Started']
+            turnLog: ['Game Started'],
+            deckCycles: 1
         };
     }
 
@@ -121,6 +122,17 @@ export class GameEngine {
 
             // Reshuffle
             this.state.turnLog.push("Reshuffling Discard Pile into Deck...");
+
+            // Increment Cycle
+            this.state.deckCycles++;
+            if (this.state.deckCycles > 2 && this.state.finalTurnsLeft === undefined) {
+                // Trigger Final Turns
+                // Current player finishes turn. Then everyone gets 1 more turn.
+                // Total turns remaining = (Players * 1) + 1 (Current player's endTurn decrement)
+                this.state.finalTurnsLeft = this.state.players.length + 1;
+                this.state.turnLog.push("Adventure Deck exhausted twice! Each player gets 1 final turn! ⏳");
+            }
+
             // Shuffle function is in DeckManager but we can just simplify here or import
             // ideally use the shuffle utility
             const newDeck = this.state.discardPile;
@@ -339,20 +351,46 @@ export class GameEngine {
     }
 
     private endTurn() {
+        // Decrease final turns if active
+        if (this.state.finalTurnsLeft !== undefined) {
+            this.state.finalTurnsLeft--;
+            if (this.state.finalTurnsLeft <= 0) {
+                this.triggerGameOver("Adventure deck used twice!");
+                return;
+            }
+        }
+
+        if (this.checkGameOver()) {
+            return;
+        }
+
         this.state.currentPlayerIndex = (this.state.currentPlayerIndex + 1) % this.state.players.length;
         this.state.phase = 'action';
-
-        // Check game over
-        // Rule: Both decks gone or 2 dragons killed? 
-        // "The game ends when the last Dragon is captured OR the Adventure deck has been gone through twice."
-
-        // For now, simple standard turn rotation.
 
         this.notify(); // Update UI for new player turn
 
         if (this.state.players[this.state.currentPlayerIndex].isBot) {
             this.runBotTurn();
         }
+    }
+
+    private triggerGameOver(reason: string) {
+        this.state.phase = 'game_over';
+        this.state.turnLog.push(`Game Over! ${reason}`);
+        this.notify();
+    }
+
+    private checkGameOver(): boolean {
+        // Condition 1: Both Dragons captured
+        const totalDragons = this.state.players.reduce((sum, p) =>
+            sum + p.capturedCards.filter(c => c.name === 'Dragon').length, 0);
+
+        if (totalDragons >= 2) {
+            this.triggerGameOver("Both Dragons have been defeated!");
+            return true;
+        }
+
+        return false;
     }
 
     public calculateBonuses(player: Player): { strike: number, stomp: number, scream: number } {

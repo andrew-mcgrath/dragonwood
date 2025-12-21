@@ -86,4 +86,6 @@ export interface GameState {
   };
   phase: GamePhase;
   turnLog: string[];
+  deckCycles: number;
+  finalTurnsLeft?: number;
 }
