@@ -51,6 +51,11 @@ function App() {
     }
   };
 
+  const handleRenamePlayer = (playerId: string, newName: string) => {
+    gameEngine.setPlayerName(playerId, newName);
+    refresh();
+  };
+
   if (gameEngine instanceof Error || (gameEngine as any).phase === 'error') {
     return <div style={{ color: 'red', padding: 20 }}>
       <h1>Fatal Error</h1>
@@ -65,6 +70,7 @@ function App() {
         onDraw={handleDraw}
         onCapture={handleCapture}
         onPenaltyDiscard={handlePenaltyDiscard}
+        onRenamePlayer={handleRenamePlayer}
       />
     </div>
   );

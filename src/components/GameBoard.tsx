@@ -7,6 +7,7 @@ interface GameBoardProps {
     onDraw: () => void;
     onCapture: (cardId: string, attackType: AttackType, cardIdsToPlay: string[]) => void;
     onPenaltyDiscard: (cardId: string) => void;
+    onRenamePlayer: (playerId: string, newName: string) => void;
 }
 
 const DiceFace: React.FC<{ value: number }> = ({ value }) => {
@@ -39,7 +40,7 @@ const DiceFace: React.FC<{ value: number }> = ({ value }) => {
     );
 };
 
-export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCapture, onPenaltyDiscard }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCapture, onPenaltyDiscard, onRenamePlayer }) => {
     const player = gameState.players[gameState.currentPlayerIndex];
     const isMyTurn = !player.isBot; // Assuming index 0 is human usually, or check ID
 
@@ -68,6 +69,23 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             setSelectedHandCards([]);
             setSelectedLandscapeCard(null);
         }
+    };
+
+    const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
+    const [tempName, setTempName] = useState("");
+
+    const startEditing = (p: typeof gameState.players[0]) => {
+        if (!p.isBot) {
+            setEditingPlayerId(p.id);
+            setTempName(p.name);
+        }
+    };
+
+    const saveName = () => {
+        if (editingPlayerId && tempName.trim()) {
+            onRenamePlayer(editingPlayerId, tempName.trim());
+        }
+        setEditingPlayerId(null);
     };
 
     return (
@@ -100,7 +118,27 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
                         return (
                             <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                <div style={{ fontWeight: 'bold' }}>{p.name} {p.isBot ? '🤖' : '👤'}</div>
+                                {editingPlayerId === p.id ? (
+                                    <input
+                                        autoFocus
+                                        value={tempName}
+                                        onChange={(e) => setTempName(e.target.value)}
+                                        onBlur={saveName}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') saveName();
+                                            if (e.key === 'Escape') setEditingPlayerId(null);
+                                        }}
+                                        style={{ fontSize: '1em', padding: '2px', fontWeight: 'bold', width: '120px', textAlign: 'right' }}
+                                    />
+                                ) : (
+                                    <div
+                                        style={{ fontWeight: 'bold', cursor: !p.isBot ? 'pointer' : 'default', textDecoration: !p.isBot ? 'underline' : 'none' }}
+                                        onClick={() => startEditing(p)}
+                                        title={!p.isBot ? "Click to rename" : ""}
+                                    >
+                                        {p.name} {p.isBot ? '🤖' : '👤'}
+                                    </div>
+                                )}
                                 <div style={{ fontSize: '1.2em', color: '#f1c40f' }}>🏆 {score} VP</div>
                                 <div style={{ fontSize: '0.8em', display: 'flex', gap: '5px' }}>
                                     {bonuses.strike > 0 && <span title="Strike Bonus">⚔️+{bonuses.strike}</span>}

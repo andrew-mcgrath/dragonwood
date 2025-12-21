@@ -25,6 +25,15 @@ export class GameEngine {
     public getState(): GameState {
         return this.state;
     }
+
+    public setPlayerName(playerId: string, newName: string) {
+        const player = this.state.players.find(p => p.id === playerId);
+        if (player) {
+            player.name = newName;
+            this.notify();
+        }
+    }
+
     private initializeGame(): GameState {
         const adventurerDeck = createAdventurerDeck();
         const dragonwoodDeck = createDragonwoodDeck();
