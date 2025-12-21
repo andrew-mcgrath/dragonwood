@@ -1,4 +1,4 @@
-import type { AdventurerCard, Creature, DragonwoodCard, Enhancement, EventCard, LuckyLadybugCard, PlayerCard, Suit } from './types';
+import type { Creature, DragonwoodCard, Enhancement, PlayerCard, Suit } from './types';
 
 // Constants
 const SUITS: Suit[] = ['red', 'orange', 'yellow', 'green', 'blue'];
@@ -58,11 +58,6 @@ const ENHANCEMENTS_DATA: Omit<Enhancement, 'id' | 'type'>[] = [
     { name: 'Cloak of Darkness', effectDescription: 'Add +2 to all Screams', victoryPoints: 2, captureCost: { strike: 99, stomp: 99, scream: 5 }, image: 'cloak_of_darkness' },
     { name: 'Magical Boots', effectDescription: 'Add +2 to all Stomps', victoryPoints: 2, captureCost: { strike: 99, stomp: 5, scream: 99 }, image: 'magical_boots' },
     { name: 'Honey Pot', effectDescription: 'Re-roll any 1', victoryPoints: 0, captureCost: { strike: 4, stomp: 4, scream: 4 }, image: 'honey_pot' },
-];
-
-const EVENTS_DATA: Omit<EventCard, 'id' | 'type'>[] = [
-    { name: 'Thunderstorm', description: 'All players must discard 1 card.' },
-    { name: 'Windstorm', description: 'Pass your hand to the player on your left.' }
 ];
 
 export function createDragonwoodDeck(): DragonwoodCard[] {

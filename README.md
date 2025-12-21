@@ -63,6 +63,15 @@ Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dic
 
 4.  Open your browser and navigate to `http://localhost:5173` (or the port shown in your terminal).
 
+### Running with Docker
+
+1.  Make sure you have Docker installed.
+2.  Run with Docker Compose:
+    ```bash
+    docker compose up --build -d
+    ```
+3.  Open browser at `http://localhost:8080`.
+
 ## How to Play
 
 1.  **On your turn**, you can either:

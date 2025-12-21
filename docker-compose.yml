@@ -1,0 +1,7 @@
+services:
+  dragonwood:
+    build: .
+    ports:
+      - "8080:80"
+    container_name: dragonwood-app
+    restart: always
