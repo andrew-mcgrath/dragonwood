@@ -15,16 +15,40 @@ export const CardComponent: React.FC<CardProps> = ({ card, isSelected, onClick }
 
     if (card.type === 'adventurer') {
         const adv = card as AdventurerCard;
+        const imageUrl = `/images/adventurer_${adv.suit}.png`;
+
         bgStyle = {
-            border: `4px solid var(--suit-${adv.suit})`
+            border: `4px solid var(--suit-${adv.suit})`,
+            backgroundImage: `url(${imageUrl})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            position: 'relative'
         };
+
+        // overlay for text specifically
         content = (
             <>
-                <div style={{ fontSize: '2em', fontWeight: 'bold', color: `var(--suit-${adv.suit})` }}>
+                <div style={{
+                    position: 'absolute',
+                    top: '5px',
+                    left: '5px',
+                    fontSize: '1.5em',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    textShadow: '2px 2px 2px black, 0 0 5px var(--suit-' + adv.suit + ')'
+                }}>
                     {adv.value}
                 </div>
-                <div style={{ textTransform: 'capitalize' }}>
-                    {adv.suit}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '5px',
+                    right: '5px',
+                    fontSize: '1.5em',
+                    fontWeight: 'bold',
+                    color: 'white',
+                    textShadow: '2px 2px 2px black, 0 0 5px var(--suit-' + adv.suit + ')'
+                }}>
+                    {adv.value}
                 </div>
             </>
         );
