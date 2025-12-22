@@ -39,7 +39,7 @@ export const SplashScreen: React.FC<SplashProps> = ({ onStartGame }) => {
                         On your turn, you can either:
                     </p>
                     <ul style={{ listStyleType: 'none', paddingLeft: '10px' }}>
-                        <li>🃏 <strong>Draw</strong> 1 Adventurer Card (or reload if you get a Lucky Ladybug!)</li>
+                        <li>🃏 <strong>Draw</strong> 1 Adventurer Card</li>
                         <li>⚔️ <strong>Capture</strong> a card from the landscape using cards from your hand.</li>
                     </ul>
 
