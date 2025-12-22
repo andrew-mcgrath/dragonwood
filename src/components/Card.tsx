@@ -55,19 +55,30 @@ export const CardComponent: React.FC<CardProps> = ({ card, isSelected, onClick }
     } else if (card.type === 'lucky_ladybug') {
         bgStyle = {
             border: '4px solid pink',
+            backgroundImage: `url(/images/lucky_ladybug.png)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
+            justifyContent: 'flex-end',
             alignItems: 'center',
-            textAlign: 'center',
-            padding: '5px'
+            paddingBottom: '10px'
         };
         content = (
-            <>
-                <div style={{ fontSize: '2em' }}>🐞</div>
-                <div style={{ fontWeight: 'bold' }}>Lucky Ladybug</div>
-                <div style={{ fontSize: '0.8em', marginTop: '5px' }}>Discard immediately to draw 2 cards</div>
-            </>
+            <div style={{
+                background: 'rgba(255, 255, 255, 0.9)',
+                padding: '4px',
+                borderRadius: '8px',
+                color: '#c0392b',
+                border: '1px solid #e74c3c',
+                fontSize: '0.8em',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                textAlign: 'center',
+                width: '90%'
+            }}>
+                <div style={{ fontWeight: 'bold', fontSize: '1.1em', marginBottom: '2px' }}>🐞 Ladybug</div>
+                <div style={{ lineHeight: '1.1' }}>Discard immediately and draw two cards</div>
+            </div>
         );
     } else if (card.type === 'creature') {
         const creat = card as Creature;

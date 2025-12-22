@@ -105,38 +105,35 @@ export class GameEngine {
 
     public drawCard() {
         if (this.state.phase !== 'action') return;
-
         const player = this.state.players[this.state.currentPlayerIndex];
 
-        // Draw 1 card
-        // If deck is empty, reshuffle discard pile
+        // Use recursive helper to handle Ladybugs
+        this.performDraw(player);
+
+        this.endTurn();
+    }
+
+    // Helper to handle drawing and Ladybug recursion
+    private performDraw(player: Player) {
+        // Shuffle if needed
         if (this.state.adventurerDeck.length === 0) {
+            // Deck empty, try to reshuffle
             if (this.state.discardPile.length === 0) {
-                // Game Over condition or just pass turn?
-                // Rule: "The game ends when... the Adventure deck has been gone through twice" (classic rule).
-                // Simpler Rule: If both empty, cannot draw.
-                this.state.turnLog.push("Adventurer Deck is empty!");
-                this.endTurn();
-                return;
+                this.state.turnLog.push("Adventurer Deck is empty and Discard is empty!");
+                return; // Nothing to draw
             }
 
-            // Reshuffle
             this.state.turnLog.push("Reshuffling Discard Pile into Deck...");
 
             // Increment Cycle
             this.state.deckCycles++;
             if (this.state.deckCycles > 2 && this.state.finalTurnsLeft === undefined) {
-                // Trigger Final Turns
-                // Current player finishes turn. Then everyone gets 1 more turn.
-                // Total turns remaining = (Players * 1) + 1 (Current player's endTurn decrement)
                 this.state.finalTurnsLeft = this.state.players.length + 1;
                 this.state.turnLog.push("Adventure Deck exhausted twice! Each player gets 1 final turn! ⏳");
             }
 
-            // Shuffle function is in DeckManager but we can just simplify here or import
-            // ideally use the shuffle utility
+            // Shuffle
             const newDeck = this.state.discardPile;
-            // Simple shuffle here to avoid circular imports or complex calls if shuffle isn't a method of GameEngine
             for (let i = newDeck.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
@@ -147,41 +144,18 @@ export class GameEngine {
 
         const card = this.state.adventurerDeck.pop();
         if (card) {
-            // Check for Lucky Ladybug
             if (card.type === 'lucky_ladybug') {
-                this.state.turnLog.push(`${player.name} drew a Lucky Ladybug! 🐞 Draw 2 more.`);
+                this.state.turnLog.push(`${player.name} drew a Lucky Ladybug! 🐞 Discarding and drawing 2 more...`);
                 this.state.discardPile.push(card);
 
-                // Draw 2 more
-                for (let i = 0; i < 2; i++) {
-                    if (this.state.adventurerDeck.length === 0) {
-                        if (this.state.discardPile.length > 0) {
-                            this.state.turnLog.push("Reshuffling for extra draw...");
-                            const newDeck = this.state.discardPile;
-                            for (let j = newDeck.length - 1; j > 0; j--) {
-                                const k = Math.floor(Math.random() * (j + 1));
-                                [newDeck[j], newDeck[k]] = [newDeck[k], newDeck[j]];
-                            }
-                            this.state.adventurerDeck = newDeck;
-                            this.state.discardPile = [];
-                        } else {
-                            break; // No cards left to draw
-                        }
-                    }
-                    const extra = this.state.adventurerDeck.pop();
-                    if (extra) {
-                        player.hand.push(extra);
-                        this.state.turnLog.push(`${player.name} drew ${extra.type === 'adventurer' ? extra.value + ' ' + extra.suit : 'another ladybug'}`);
-                    }
-                }
-                this.state.turnLog.push(`${player.name} drew a card.`);
+                // Draw 2 more recursively
+                this.performDraw(player);
+                this.performDraw(player);
             } else {
                 player.hand.push(card);
-                this.state.turnLog.push(`${player.name} drew a card.`);
+                this.state.turnLog.push(`${player.name} drew ${card.value} ${card.suit}`);
             }
         }
-
-        this.endTurn();
     }
 
     // Attempt to capture mechanism
