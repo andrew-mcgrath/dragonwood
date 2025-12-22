@@ -240,34 +240,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             </section>
 
             {/* Player Area */}
-            <section style={{ marginTop: 'auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <h3>Your Hand ({gameState.players[0].hand.length})</h3>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        {gameState.phase === 'penalty_discard' && isMyTurn ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <span style={{ color: '#c0392b', fontWeight: 'bold' }}>Capture Failed! Select 1 card to discard:</span>
-                                <button
-                                    onClick={handleDiscard}
-                                    disabled={selectedHandCards.length !== 1}
-                                    style={{ background: '#c0392b', color: 'white' }}
-                                >
-                                    🗑️ Discard Selected
-                                </button>
-                            </div>
-                        ) : gameState.phase === 'game_over' ? (
-                            <div style={{ fontWeight: 'bold', color: '#f1c40f' }}>GAME OVER</div>
-                        ) : (
-                            <>
-                                <button onClick={onDraw} disabled={!isMyTurn || gameState.phase !== 'action'} title="Draw 1 card from the deck">🃏 Draw Card</button>
-                                <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards in numerical order (Straight)">⚔️ Strike (Straight)</button>
-                                <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same suit (Flush)">🦶 Stomp (Flush)</button>
-                                <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same value (Kind)">😱 Scream (Kind)</button>
-                            </>
-                        )}
-                    </div>
-                </div>
-                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '10px' }}>
+            {/* Player Area */}
+            <section>
+                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '30px 10px 10px 10px' }}>
                     {[...gameState.players[0].hand].sort((a, b) => {
                         if (a.type !== 'adventurer' || b.type !== 'adventurer') return 0; // Keep special cards as is or move to end
                         const suits = ['red', 'orange', 'purple', 'green', 'blue'];
@@ -282,6 +257,31 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             onClick={() => toggleHandCard(card.id)}
                         />
                     ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <h3 style={{ margin: '0 20px 0 0' }}>Your Hand ({gameState.players[0].hand.length})</h3>
+                    {gameState.phase === 'penalty_discard' && isMyTurn ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ color: '#c0392b', fontWeight: 'bold' }}>Capture Failed! Select 1 card to discard:</span>
+                            <button
+                                onClick={handleDiscard}
+                                disabled={selectedHandCards.length !== 1}
+                                style={{ background: '#c0392b', color: 'white' }}
+                            >
+                                🗑️ Discard Selected
+                            </button>
+                        </div>
+                    ) : gameState.phase === 'game_over' ? (
+                        <div style={{ fontWeight: 'bold', color: '#f1c40f' }}>GAME OVER</div>
+                    ) : (
+                        <>
+                            <button onClick={onDraw} disabled={!isMyTurn || gameState.phase !== 'action'} title="Draw 1 card from the deck">🃏 Draw Card</button>
+                            <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards in numerical order (Straight)">⚔️ Strike (Straight)</button>
+                            <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same suit (Flush)">🦶 Stomp (Flush)</button>
+                            <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same value (Kind)">😱 Scream (Kind)</button>
+                        </>
+                    )}
                 </div>
             </section>
 

@@ -98,6 +98,8 @@ button:focus-visible {
 }
 
 .card.selected {
-  outline: 4px solid var(--accent-color);
-  transform: translateY(-10px);
+  outline: 4px solid #f1c40f;
+  transform: translateY(-15px) scale(1.05);
+  box-shadow: 0 0 15px rgba(241, 196, 15, 0.5), 0 5px 10px rgba(0, 0, 0, 0.3);
+  z-index: 10;
 }
