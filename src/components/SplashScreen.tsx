@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 
 interface SplashProps {
-    onStartGame: (playerName: string) => void;
+    onStartGame: (playerName: string, botName: string) => void;
 }
 
 export const SplashScreen: React.FC<SplashProps> = ({ onStartGame }) => {
     const [name, setName] = useState("Player 1");
+    const [botName, setBotName] = useState("Bot");
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (name.trim()) {
-            onStartGame(name.trim());
+        if (name.trim() && botName.trim()) {
+            onStartGame(name.trim(), botName.trim());
         }
     };
 
@@ -65,26 +66,41 @@ export const SplashScreen: React.FC<SplashProps> = ({ onStartGame }) => {
                 </div>
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-                    <label style={{ fontSize: '1.5em' }}>
-                        Enter Your Name:
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            style={{
-                                display: 'block', marginTop: '10px', fontSize: '1em', padding: '10px',
-                                borderRadius: '8px', border: 'none', width: '300px', textAlign: 'center'
-                            }}
-                            autoFocus
-                        />
-                    </label>
+                    <div style={{ display: 'flex', gap: '40px' }}>
+                        <label style={{ fontSize: '1.2em', textAlign: 'center' }}>
+                            <div>Your Name</div>
+                            <input
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                style={{
+                                    display: 'block', marginTop: '10px', fontSize: '1em', padding: '10px',
+                                    borderRadius: '8px', border: 'none', width: '250px', textAlign: 'center'
+                                }}
+                                autoFocus
+                            />
+                        </label>
+                        <label style={{ fontSize: '1.2em', textAlign: 'center' }}>
+                            <div>Bot Name</div>
+                            <input
+                                type="text"
+                                value={botName}
+                                onChange={(e) => setBotName(e.target.value)}
+                                style={{
+                                    display: 'block', marginTop: '10px', fontSize: '1em', padding: '10px',
+                                    borderRadius: '8px', border: 'none', width: '250px', textAlign: 'center'
+                                }}
+                            />
+                        </label>
+                    </div>
+
                     <button
                         type="submit"
                         style={{
                             fontSize: '1.5em', padding: '15px 40px', background: '#27ae60', color: 'white',
                             border: 'none', borderRadius: '50px', cursor: 'pointer',
                             boxShadow: '0 5px 15px rgba(39, 174, 96, 0.4)', transition: 'transform 0.2s',
-                            fontWeight: 'bold'
+                            fontWeight: 'bold', marginTop: '20px'
                         }}
                     >
                         ⚔️ Start Adventure ⚔️

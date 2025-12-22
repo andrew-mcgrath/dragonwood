@@ -127,22 +127,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
         setGenericToast({ message: `${player.name} drew a card!`, visible: true, type: 'info' });
     };
 
-    const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
-    const [tempName, setTempName] = useState("");
 
-    const startEditing = (p: typeof gameState.players[0]) => {
-        if (!p.isBot) {
-            setEditingPlayerId(p.id);
-            setTempName(p.name);
-        }
-    };
-
-    const saveName = () => {
-        if (editingPlayerId && tempName.trim()) {
-            onRenamePlayer(editingPlayerId, tempName.trim());
-        }
-        setEditingPlayerId(null);
-    };
 
     return (
         <div style={{ padding: '20px', width: '100%', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
@@ -186,26 +171,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                     minWidth: '120px',
                                     cursor: 'help'
                                 }}>
-                                {editingPlayerId === p.id ? (
-                                    <div style={{ display: 'flex', gap: '5px' }}>
-                                        <input
-                                            value={tempName}
-                                            onChange={(e) => setTempName(e.target.value)}
-                                            onKeyDown={(e) => e.key === 'Enter' && saveName()}
-                                            autoFocus
-                                            style={{ width: '80px', padding: '2px' }}
-                                        />
-                                        <button onClick={saveName} style={{ fontSize: '0.8em', cursor: 'pointer' }}>💾</button>
-                                    </div>
-                                ) : (
-                                    <div
-                                        style={{ fontWeight: 'bold', fontSize: '1.2em', marginBottom: '5px', cursor: !p.isBot ? 'pointer' : 'default', textDecoration: !p.isBot ? 'underline' : 'none', color: '#ecf0f1' }}
-                                        onClick={() => startEditing(p)}
-                                        title={!p.isBot ? "Click to rename" : ""}
-                                    >
-                                        {p.name} {p.isBot ? '🤖' : '👤'}
-                                    </div>
-                                )}
+                                <div
+                                    style={{ fontWeight: 'bold', fontSize: '1.2em', marginBottom: '5px', color: '#ecf0f1' }}
+                                >
+                                    {p.name} {p.isBot ? '🤖' : '👤'}
+                                </div>
                                 <div style={{ fontSize: '1.2em', color: '#f1c40f' }}>🏆 {score} VP</div>
                                 <div style={{ fontSize: '0.8em', display: 'flex', gap: '5px' }}>
                                     {bonuses.strike > 0 && <span title="Strike Bonus">⚔️+{bonuses.strike}</span>}

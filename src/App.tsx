@@ -30,8 +30,9 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  const handleStartGame = (playerName: string) => {
+  const handleStartGame = (playerName: string, botName: string) => {
     gameEngine.setPlayerName('p1', playerName);
+    gameEngine.setPlayerName('p2', botName);
     setGameStarted(true);
     refresh();
   };
