@@ -345,7 +345,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                             padding: '10px', background: i === 0 ? '#f1c40f' : 'white',
                                             borderRadius: '8px', marginBottom: '10px',
                                             border: i === 0 ? '3px solid #f39c12' : '1px solid #bdc3c7',
-                                            fontWeight: i === 0 ? 'bold' : 'normal'
+                                            fontWeight: i === 0 ? 'bold' : 'normal',
+                                            color: '#2c3e50'
                                         }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                 <span style={{ fontSize: '1.5em' }}>{i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')}</span>
