@@ -87,4 +87,4 @@ Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dic
 
 ## License
 
-This project is for educational/personal use. Dragonwood is a trademark of Gamewright.
+This project is for educational/personal use. [Dragonwood](https://gamewright.com/product/Dragonwood) is a copyright of [Gamewright](https://gamewright.com/).

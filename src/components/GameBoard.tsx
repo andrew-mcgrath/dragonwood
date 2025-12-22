@@ -267,7 +267,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                     }}>
                                         ⚔️
                                     </button>
-                                    {isMyTurn && selectedLandscapeCard && selectedHandCards.length > 0 && selectedLandscapeCard.type === 'creature' && (
+                                    {isMyTurn && selectedLandscapeCard && selectedHandCards.length > 0 && (selectedLandscapeCard.type === 'creature' || selectedLandscapeCard.type === 'enhancement') && (
                                         <div style={{
                                             position: 'absolute', top: -10, right: -10,
                                             background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
@@ -292,7 +292,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                     }}>
                                         🦶
                                     </button>
-                                    {isMyTurn && selectedLandscapeCard && selectedHandCards.length > 0 && selectedLandscapeCard.type === 'creature' && (
+                                    {isMyTurn && selectedLandscapeCard && selectedHandCards.length > 0 && (selectedLandscapeCard.type === 'creature' || selectedLandscapeCard.type === 'enhancement') && (
                                         <div style={{
                                             position: 'absolute', top: -10, right: -10,
                                             background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
