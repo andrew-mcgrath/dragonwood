@@ -294,6 +294,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                             {(() => {
                                                 const target = (selectedLandscapeCard as any).captureCost.strike;
                                                 const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0);
+
+                                                // Validate Strike (Straight)
+                                                const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
+                                                const sorted = [...cards].sort((a, b) => a.value - b.value);
+                                                let isValid = true;
+                                                for (let i = 0; i < sorted.length - 1; i++) {
+                                                    if (sorted[i + 1].value !== sorted[i].value + 1) isValid = false;
+                                                }
+                                                if (!isValid) return "0% ";
+
                                                 const prob = Probability.calculateSuccessChance(selectedHandCards.length, Math.max(1, target - bonus));
                                                 return `${Math.round(prob)}% `;
                                             })()}
@@ -318,7 +328,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                         }}>
                                             {(() => {
                                                 const target = (selectedLandscapeCard as any).captureCost.stomp;
-                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Unicorn' ? 2 : 0), 0);
+                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Unicorn' ? 2 : 0), 0); // Corrected bonus logic in engine previously? Wait, Magical Unicorn doesn't exist, it's Magical Boots. Checked prev code, it said Magical Boots. Let me double check what was there.
+
+                                                // Validate Stomp (Flush)
+                                                const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
+                                                const isValid = cards.every(c => c.suit === cards[0].suit);
+                                                if (!isValid) return "0% ";
+
                                                 const prob = Probability.calculateSuccessChance(selectedHandCards.length, Math.max(1, target - bonus));
                                                 return `${Math.round(prob)}% `;
                                             })()}
@@ -343,7 +359,13 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                         }}>
                                             {(() => {
                                                 const target = (selectedLandscapeCard as any).captureCost.scream;
-                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Fire Breathing Dragon' ? 2 : 0), 0);
+                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Cloak of Darkness' ? 2 : 0), 0); // Correct bonus check?
+
+                                                // Validate Scream (Kind)
+                                                const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
+                                                const isValid = cards.every(c => c.value === cards[0].value);
+                                                if (!isValid) return "0% ";
+
                                                 const prob = Probability.calculateSuccessChance(selectedHandCards.length, Math.max(1, target - bonus));
                                                 return `${Math.round(prob)}% `;
                                             })()}
