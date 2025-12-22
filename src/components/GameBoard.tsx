@@ -152,6 +152,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                         const score = p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0);
                         const isActive = p.id === player.id;
 
+                        // Create detailed tooltip
+                        const capturedTooltip = p.capturedCards.length > 0
+                            ? `Captured Cards (${p.capturedCards.length}):\n${p.capturedCards.map(c => `• ${c.name}`).join('\n')}`
+                            : "No cards captured";
+
                         // Calculate bonuses for display
                         const bonuses = {
                             strike: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0),
@@ -161,14 +166,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                         const hasHoneyPot = p.capturedCards.some(c => c.name === 'Honey Pot');
 
                         return (
-                            <div key={p.id} style={{
-                                padding: '10px 15px',
-                                background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
-                                borderRadius: '10px',
-                                border: isActive ? '2px solid #f1c40f' : '1px solid transparent',
-                                display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px',
-                                minWidth: '120px'
-                            }}>
+                            <div key={p.id}
+                                title={capturedTooltip}
+                                style={{
+                                    padding: '10px 15px',
+                                    background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+                                    borderRadius: '10px',
+                                    border: isActive ? '2px solid #f1c40f' : '1px solid transparent',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px',
+                                    minWidth: '120px',
+                                    cursor: 'help'
+                                }}>
                                 {editingPlayerId === p.id ? (
                                     <div style={{ display: 'flex', gap: '5px' }}>
                                         <input
