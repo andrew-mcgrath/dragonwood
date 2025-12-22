@@ -204,7 +204,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: gameState.diceRollConfig.success === true ? '#27ae60' : (gameState.diceRollConfig.success === false ? '#c0392b' : (gameState.diceRollConfig.pending ? '#f1c40f' : '#95a5a6')),
+                    background: gameState.diceRollConfig.success === true ? 'linear-gradient(135deg, #2ecc71, #27ae60)' : (gameState.diceRollConfig.success === false ? 'linear-gradient(135deg, #e74c3c, #c0392b)' : (gameState.diceRollConfig.pending ? 'linear-gradient(135deg, #f1c40f, #f39c12)' : 'linear-gradient(135deg, #95a5a6, #7f8c8d)')),
                     borderRadius: '8px',
                     color: 'white',
                     transition: 'background 0.3s ease'
@@ -267,7 +267,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             <button
                                 onClick={handleDiscard}
                                 disabled={selectedHandCards.length !== 1}
-                                style={{ background: '#c0392b', color: 'white' }}
+                                style={{ background: 'linear-gradient(135deg, #e74c3c, #c0392b)', color: 'white' }}
                             >
                                 🗑️ Discard Selected
                             </button>
@@ -276,10 +276,42 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                         <div style={{ fontWeight: 'bold', color: '#f1c40f' }}>GAME OVER</div>
                     ) : (
                         <>
-                            <button onClick={onDraw} disabled={!isMyTurn || gameState.phase !== 'action'} title="Draw 1 card from the deck">🃏 Draw Card</button>
-                            <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards in numerical order (Straight)">⚔️ Strike (Straight)</button>
-                            <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same suit (Flush)">🦶 Stomp (Flush)</button>
-                            <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same value (Kind)">😱 Scream (Kind)</button>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                                <button onClick={onDraw} disabled={!isMyTurn || gameState.phase !== 'action'} title="Draw 1 card from the deck" style={{
+                                    fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'linear-gradient(135deg, #bdc3c7, #95a5a6)', color: 'white', border: '2px solid #ecf0f1', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                }}>
+                                    🃏
+                                </button>
+                                <span style={{ fontSize: '0.8em', fontWeight: 'bold', color: '#ecf0f1' }}>Draw</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                                <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards in numerical order (Straight)" style={{
+                                    fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'linear-gradient(135deg, #e74c3c, #c0392b)', color: 'white', border: '2px solid #c0392b', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                }}>
+                                    ⚔️
+                                </button>
+                                <span style={{ fontSize: '0.8em', fontWeight: 'bold', color: '#ecf0f1' }}>Strike (Straight)</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                                <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same suit (Flush)" style={{
+                                    fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'linear-gradient(135deg, #e67e22, #d35400)', color: 'white', border: '2px solid #e67e22', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                }}>
+                                    🦶
+                                </button>
+                                <span style={{ fontSize: '0.8em', fontWeight: 'bold', color: '#ecf0f1' }}>Stomp (Flush)</span>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                                <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same value (Kind)" style={{
+                                    fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    background: 'linear-gradient(135deg, #9b59b6, #8e44ad)', color: 'white', border: '2px solid #8e44ad', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                }}>
+                                    😱
+                                </button>
+                                <span style={{ fontSize: '0.8em', fontWeight: 'bold', color: '#ecf0f1' }}>Scream (Kind)</span>
+                            </div>
                         </>
                     )}
                 </div>
