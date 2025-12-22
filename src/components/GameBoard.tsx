@@ -53,7 +53,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     const [selectedLandscapeCardId, setSelectedLandscapeCardId] = useState<string | null>(null);
     const [isLogCollapsed, setIsLogCollapsed] = useState(true);
     const [showToast, setShowToast] = useState(false);
-    const [genericToast, setGenericToast] = useState<{ message: string, visible: boolean, type: 'info' }>({ message: '', visible: false, type: 'info' });
+    const [genericToast, setGenericToast] = useState<{ message: string, visible: boolean, type: 'info' | 'error' | 'success' }>({ message: '', visible: false, type: 'info' });
     const selectedLandscapeCard = gameState.landscape.find(c => c.id === selectedLandscapeCardId);
 
     // Ref for the log container
@@ -97,7 +97,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
     // Helper for transparent gradients
     const getToastBackground = () => {
-        if (genericToast.visible) return 'linear-gradient(135deg, rgba(52, 73, 94, 0.6), rgba(44, 62, 80, 0.6))'; // Theme-matched neutral
+        if (genericToast.visible) {
+            if (genericToast.type === 'error') return 'linear-gradient(135deg, rgba(192, 57, 43, 0.95), rgba(231, 76, 60, 0.95))';
+            return 'linear-gradient(135deg, rgba(52, 73, 94, 0.9), rgba(44, 62, 80, 0.9))';
+        }
         if (gameState.diceRollConfig.success === true) return 'linear-gradient(135deg, rgba(46, 204, 113, 0.6), rgba(39, 174, 96, 0.6))';
         if (gameState.diceRollConfig.success === false) return 'linear-gradient(135deg, rgba(231, 76, 60, 0.6), rgba(192, 57, 43, 0.6))';
         if (gameState.diceRollConfig.pending) return 'linear-gradient(135deg, rgba(241, 196, 15, 0.6), rgba(243, 156, 18, 0.6))';
@@ -107,6 +110,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
 
     const handleDiscard = () => {
+        if (selectedHandCards.length === 0) {
+            setGenericToast({ message: "⚠️ Select a card to discard!", visible: true, type: 'error' });
+            return;
+        }
+        if (selectedHandCards.length > 1) {
+            setGenericToast({ message: "⚠️ Select ONLY 1 card!", visible: true, type: 'error' });
+            return;
+        }
         if (selectedHandCards.length === 1) {
             onPenaltyDiscard(selectedHandCards[0]);
             setSelectedHandCards([]);
@@ -258,7 +269,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             <span style={{ color: '#c0392b', fontWeight: 'bold' }}>Capture Failed! Select 1 card to discard:</span>
                             <button
                                 onClick={handleDiscard}
-                                disabled={selectedHandCards.length !== 1}
                                 style={{ background: 'linear-gradient(135deg, #e74c3c, #c0392b)', color: 'white' }}
                             >
                                 🗑️ Discard Selected
@@ -328,7 +338,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                         }}>
                                             {(() => {
                                                 const target = (selectedLandscapeCard as any).captureCost.stomp;
-                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Unicorn' ? 2 : 0), 0); // Corrected bonus logic in engine previously? Wait, Magical Unicorn doesn't exist, it's Magical Boots. Checked prev code, it said Magical Boots. Let me double check what was there.
+                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Boots' ? 2 : 0), 0);
 
                                                 // Validate Stomp (Flush)
                                                 const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
