@@ -141,7 +141,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             {/* Header: Scores / Turn Info */}
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '15px 20px', borderRadius: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <h2 style={{ margin: 0, textShadow: '2px 2px 4px rgba(0,0,0,0.5)', fontSize: '2em' }}>🐲 Dragonwood</h2>
+                    <h2 style={{ margin: 0, textShadow: '2px 2px 4px rgba(0,0,0,0.5)', fontSize: '2em' }}>🐉 Dragonwood 🌲</h2>
                     <div style={{ padding: '5px 15px', background: isMyTurn ? 'linear-gradient(135deg, #2ecc71, #27ae60)' : 'linear-gradient(135deg, #7f8c8d, #34495e)', borderRadius: '20px', fontWeight: 'bold' }}>
                         {isMyTurn ? "YOUR TURN" : (player.isBot ? "BOT'S TURN" : `${player.name}'s TURN`)}
                     </div>
