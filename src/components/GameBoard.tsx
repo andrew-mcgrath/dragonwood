@@ -53,15 +53,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     const [selectedLandscapeCardId, setSelectedLandscapeCardId] = useState<string | null>(null);
     const [isLogCollapsed, setIsLogCollapsed] = useState(true);
     const [showToast, setShowToast] = useState(false);
+    const [genericToast, setGenericToast] = useState<{ message: string, visible: boolean, type: 'info' }>({ message: '', visible: false, type: 'info' });
     const selectedLandscapeCard = gameState.landscape.find(c => c.id === selectedLandscapeCardId);
 
     // Ref for the log container
     const logContainerRef = useRef<HTMLDivElement>(null);
 
-    // Show toast when rolling or when results come in
+    // Show dice toast when rolling or when results come in
     useEffect(() => {
         if (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0) {
             setShowToast(true);
+            setGenericToast(prev => ({ ...prev, visible: false })); // Hide generic toast if dice roll starts
         }
     }, [gameState.diceRollConfig.pending, gameState.diceRollConfig.results]);
 
@@ -72,16 +74,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
         }
     }, [isLogCollapsed, gameState.turnLog.length]);
 
-    // Auto-dismiss toast after 5 seconds of RESULT display
+    // Auto-dismiss toast after 5 seconds
     useEffect(() => {
         let timer: ReturnType<typeof setTimeout>;
-        if (showToast && !gameState.diceRollConfig.pending && gameState.diceRollConfig.results.length > 0) {
+        if ((showToast && !gameState.diceRollConfig.pending && gameState.diceRollConfig.results.length > 0) || genericToast.visible) {
             timer = setTimeout(() => {
                 setShowToast(false);
+                setGenericToast(prev => ({ ...prev, visible: false }));
             }, 5000);
         }
         return () => clearTimeout(timer);
-    }, [showToast, gameState.diceRollConfig.pending, gameState.diceRollConfig.results]);
+    }, [showToast, gameState.diceRollConfig.pending, gameState.diceRollConfig.results, genericToast.visible]);
 
     const toggleHandCard = (id: string) => {
         if (selectedHandCards.includes(id)) {
@@ -94,6 +97,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
     // Helper for transparent gradients
     const getToastBackground = () => {
+        if (genericToast.visible) return 'linear-gradient(135deg, rgba(52, 73, 94, 0.6), rgba(44, 62, 80, 0.6))'; // Theme-matched neutral
         if (gameState.diceRollConfig.success === true) return 'linear-gradient(135deg, rgba(46, 204, 113, 0.6), rgba(39, 174, 96, 0.6))';
         if (gameState.diceRollConfig.success === false) return 'linear-gradient(135deg, rgba(231, 76, 60, 0.6), rgba(192, 57, 43, 0.6))';
         if (gameState.diceRollConfig.pending) return 'linear-gradient(135deg, rgba(241, 196, 15, 0.6), rgba(243, 156, 18, 0.6))';
@@ -116,6 +120,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             setSelectedHandCards([]);
             setSelectedLandscapeCardId(null);
         }
+    };
+
+    const handleDraw = () => {
+        onDraw();
+        setGenericToast({ message: `${player.name} drew a card!`, visible: true, type: 'info' });
     };
 
     const [editingPlayerId, setEditingPlayerId] = useState<string | null>(null);
@@ -290,7 +299,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                     ) : (
                         <>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-                                <button onClick={onDraw} disabled={!isMyTurn || gameState.phase !== 'action'} title="Draw 1 card from the deck" style={{
+                                <button onClick={handleDraw} disabled={!isMyTurn || gameState.phase !== 'action'} title="Draw 1 card from the deck" style={{
                                     fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     background: 'linear-gradient(135deg, #bdc3c7, #95a5a6)', color: 'white', border: '2px solid #ecf0f1', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                 }}>
@@ -429,7 +438,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
 
             {/* Toast Notification for Dice Rolls */}
-            {showToast && (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0) && (
+            {((showToast && (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0)) || genericToast.visible) && (
                 <div style={{
                     position: 'fixed',
                     bottom: '20px',
@@ -471,13 +480,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                     >✕</button>
 
                     <h3 style={{ margin: '0 0 8px 0', fontSize: '1em', textAlign: 'center', paddingRight: '15px' }}>
-                        {gameState.diceRollConfig.player ?
-                            `${gameState.diceRollConfig.player.name} ${gameState.diceRollConfig.player.isBot ? '🤖' : '👤'} `
-                            : ''}
-                        {gameState.diceRollConfig.targetCardName ? `vs ${gameState.diceRollConfig.targetCardName}: ` : ''}
-                        {gameState.diceRollConfig.pending ? 'Rolling...' : (gameState.diceRollConfig.success === true ? 'Success!' : (gameState.diceRollConfig.success === false ? 'Failed!' : (gameState.diceRollConfig.results.length > 0 ? 'Roll Result' : 'Ready to Roll')))}
+                        {genericToast.visible ? (
+                            genericToast.message
+                        ) : (
+                            <>
+                                {gameState.diceRollConfig.player ?
+                                    `${gameState.diceRollConfig.player.name} ${gameState.diceRollConfig.player.isBot ? '🤖' : '👤'} `
+                                    : ''}
+                                {gameState.diceRollConfig.targetCardName ? `vs ${gameState.diceRollConfig.targetCardName}: ` : ''}
+                                {gameState.diceRollConfig.pending ? 'Rolling...' : (gameState.diceRollConfig.success === true ? 'Success!' : (gameState.diceRollConfig.success === false ? 'Failed!' : (gameState.diceRollConfig.results.length > 0 ? 'Roll Result' : 'Ready to Roll')))}
+                            </>
+                        )}
                     </h3>
-                    {gameState.diceRollConfig.results.length > 0 && (
+                    {!genericToast.visible && gameState.diceRollConfig.results.length > 0 && (
                         <>
                             <div style={{ display: 'flex', gap: '5px', marginBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}>
                                 {gameState.diceRollConfig.results.map((val, i) => (
@@ -492,14 +507,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             </div>
                         </>
                     )}
-                    {gameState.diceRollConfig.required !== undefined && (
+                    {!genericToast.visible && gameState.diceRollConfig.required !== undefined && (
                         <div style={{ fontSize: '0.9em', marginTop: '2px', opacity: 0.9 }}>
                             Needed: {gameState.diceRollConfig.required}
                         </div>
                     )}
 
                     {/* Visual Timer Line */}
-                    {!gameState.diceRollConfig.pending && gameState.diceRollConfig.results.length > 0 && (
+                    {((!gameState.diceRollConfig.pending && gameState.diceRollConfig.results.length > 0) || genericToast.visible) && (
                         <div style={{
                             position: 'absolute',
                             bottom: 0,
@@ -527,33 +542,48 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             textAlign: 'center', boxShadow: '0 0 30px rgba(230, 126, 34, 0.6)',
                             maxWidth: '500px', width: '90%'
                         }}>
-                            <h1 style={{ fontSize: '3em', color: '#e67e22', marginBottom: '20px' }}>🏆 Game Over! 🏆</h1>
+                            {(() => {
+                                const allPlayers = gameState.players.map(p => ({
+                                    ...p,
+                                    score: p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0)
+                                })).sort((a, b) => b.score - a.score);
 
-                            <div style={{ marginBottom: '30px', textAlign: 'left' }}>
-                                {gameState.players
-                                    .map(p => ({
-                                        ...p,
-                                        score: p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0)
-                                    }))
-                                    .sort((a, b) => b.score - a.score)
-                                    .map((p, i) => (
-                                        <div key={p.id} style={{
-                                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                            padding: '10px', background: i === 0 ? '#f1c40f' : 'white',
-                                            borderRadius: '8px', marginBottom: '10px',
-                                            border: i === 0 ? '3px solid #f39c12' : '1px solid #bdc3c7',
-                                            fontWeight: i === 0 ? 'bold' : 'normal',
-                                            color: '#2c3e50'
-                                        }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <span style={{ fontSize: '1.5em' }}>{i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')}</span>
-                                                <span>{p.name}</span>
-                                            </div>
-                                            <span style={{ fontSize: '1.5em' }}>{p.score} VP</span>
+                                const winner = allPlayers[0];
+                                const isWinner = winner.id === player.id;
+
+                                return (
+                                    <>
+                                        <h1 style={{ fontSize: '3em', color: isWinner ? '#f1c40f' : '#e74c3c', marginBottom: '10px' }}>
+                                            {isWinner ? '🎉 Victory! 🏆' : '💀 Defeat...'}
+                                        </h1>
+
+                                        {!isWinner && (
+                                            <p style={{ fontSize: '1.1em', color: '#7f8c8d', marginBottom: '20px', fontStyle: 'italic' }}>
+                                                "Don't give up! A true adventurer learns from every defeat. Better luck next time!"
+                                            </p>
+                                        )}
+
+                                        <div style={{ marginBottom: '30px', textAlign: 'left' }}>
+                                            {allPlayers.map((p, i) => (
+                                                <div key={p.id} style={{
+                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                    padding: '10px', background: i === 0 ? '#f1c40f' : 'white',
+                                                    borderRadius: '8px', marginBottom: '10px',
+                                                    border: i === 0 ? '3px solid #f39c12' : '1px solid #bdc3c7',
+                                                    fontWeight: i === 0 ? 'bold' : 'normal',
+                                                    color: '#2c3e50'
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                        <span style={{ fontSize: '1.5em' }}>{i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')}</span>
+                                                        <span>{p.name} {p.isBot ? '🤖' : '👤'}</span>
+                                                    </div>
+                                                    <span style={{ fontSize: '1.5em' }}>{p.score} VP</span>
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))
-                                }
-                            </div>
+                                    </>
+                                );
+                            })()}
 
                             <button
                                 onClick={() => window.location.reload()}
