@@ -151,7 +151,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '15px 20px', borderRadius: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <h2 style={{ margin: 0, textShadow: '2px 2px 4px rgba(0,0,0,0.5)', fontSize: '2em' }}>🐉 Dragonwood 🌲</h2>
-                    <div style={{ padding: '5px 15px', background: isMyTurn ? 'linear-gradient(135deg, #2ecc71, #27ae60)' : 'linear-gradient(135deg, #7f8c8d, #34495e)', borderRadius: '20px', fontWeight: 'bold' }}>
+                    <div style={{ padding: '5px 15px', background: isMyTurn ? 'linear-gradient(135deg, rgba(46, 204, 113, 0.6), rgba(39, 174, 96, 0.6))' : 'linear-gradient(135deg, rgba(127, 140, 141, 0.6), rgba(52, 73, 94, 0.6))', borderRadius: '20px', fontWeight: 'bold' }}>
                         {isMyTurn ? "YOUR TURN" : (player.isBot ? "BOT'S TURN" : `${player.name}'s TURN`)}
                     </div>
                 </div>
@@ -301,7 +301,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
                                 <button onClick={handleDraw} disabled={!isMyTurn || gameState.phase !== 'action'} title="Draw 1 card from the deck" style={{
                                     fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'linear-gradient(135deg, #bdc3c7, #95a5a6)', color: 'white', border: '2px solid #ecf0f1', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    background: 'linear-gradient(135deg, rgba(189, 195, 199, 0.6), rgba(149, 165, 166, 0.6))', color: 'white', border: '2px solid #ecf0f1', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                 }}>
                                     🃏
                                 </button>
@@ -311,7 +311,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                 <div style={{ position: 'relative' }}>
                                     <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards in numerical order (Straight)" style={{
                                         fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        background: 'linear-gradient(135deg, #e74c3c, #c0392b)', color: 'white', border: '2px solid #c0392b', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                        background: 'linear-gradient(135deg, rgba(231, 76, 60, 0.6), rgba(192, 57, 43, 0.6))', color: 'white', border: '2px solid #c0392b', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                     }}>
                                         ⚔️
                                     </button>
@@ -336,7 +336,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                 <div style={{ position: 'relative' }}>
                                     <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same suit (Flush)" style={{
                                         fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        background: 'linear-gradient(135deg, #e67e22, #d35400)', color: 'white', border: '2px solid #e67e22', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                        background: 'linear-gradient(135deg, rgba(230, 126, 34, 0.6), rgba(211, 84, 0, 0.6))', color: 'white', border: '2px solid #e67e22', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                     }}>
                                         🦶
                                     </button>
@@ -361,7 +361,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                 <div style={{ position: 'relative' }}>
                                     <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same value (Kind)" style={{
                                         fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        background: 'linear-gradient(135deg, #9b59b6, #8e44ad)', color: 'white', border: '2px solid #8e44ad', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                        background: 'linear-gradient(135deg, rgba(155, 89, 182, 0.6), rgba(142, 68, 173, 0.6))', color: 'white', border: '2px solid #8e44ad', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                     }}>
                                         😱
                                     </button>
