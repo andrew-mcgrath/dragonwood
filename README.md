@@ -28,7 +28,13 @@ Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dic
     - Real-time score and bonus display.
     - Detailed game log with history.
     - Visual indicators for enhancements and dice rolls.
-    - Player renaming.
+- **Bot Opponent 🤖**: Play against a simple AI that draws cards and competes for points (basic implementation).
+- **Dynamic UI**:
+    - Real-time score and bonus display.
+    - Detailed game log with history.
+    - Visual indicators for enhancements and dice rolls.
+    - Player and Bot renaming.
+    - Toast Notifications for enhanced visual feedback.
 
 ## Tech Stack
 
@@ -83,7 +89,10 @@ Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dic
     - **Draw a Card**: Click "Draw Card" to add to your hand.
     - **Capture**: Select a card in the **Landscape** (top row) and select cards from your **Hand** (bottom row) that form a valid attack (Strike, Stomp, or Scream). Then click the corresponding action button.
 2.  **Dice Roll**: The game calculates your dice count (1 per card + bonuses). If your total roll meets or exceeds the capture cost, you win the card!
-3.  **End of Game**: The game ends when both decks are empty or the Dragonwood deck is empty (Standard rules apply).
+3.  **End of Game**: The game ends when:
+    -   Both Dragons represent in the game are captured.
+    -   The Adventure Deck has been exhausted twice (each player gets 1 final turn).
+    -   The Dragonwood Deck is empty.
 
 ## License
 
