@@ -52,10 +52,18 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     const [selectedHandCards, setSelectedHandCards] = useState<string[]>([]);
     const [selectedLandscapeCardId, setSelectedLandscapeCardId] = useState<string | null>(null);
     const [isLogCollapsed, setIsLogCollapsed] = useState(true);
+    const [showToast, setShowToast] = useState(false);
     const selectedLandscapeCard = gameState.landscape.find(c => c.id === selectedLandscapeCardId);
 
     // Ref for the log container
     const logContainerRef = useRef<HTMLDivElement>(null);
+
+    // Show toast when rolling or when results come in
+    useEffect(() => {
+        if (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0) {
+            setShowToast(true);
+        }
+    }, [gameState.diceRollConfig.pending, gameState.diceRollConfig.results]);
 
     // Scroll to bottom when log is expanded OR when new logs arrive while expanded
     useEffect(() => {
@@ -64,6 +72,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
         }
     }, [isLogCollapsed, gameState.turnLog.length]);
 
+    // Auto-dismiss toast after 5 seconds of RESULT display
+    useEffect(() => {
+        let timer: ReturnType<typeof setTimeout>;
+        if (showToast && !gameState.diceRollConfig.pending && gameState.diceRollConfig.results.length > 0) {
+            timer = setTimeout(() => {
+                setShowToast(false);
+            }, 5000);
+        }
+        return () => clearTimeout(timer);
+    }, [showToast, gameState.diceRollConfig.pending, gameState.diceRollConfig.results]);
+
     const toggleHandCard = (id: string) => {
         if (selectedHandCards.includes(id)) {
             setSelectedHandCards(selectedHandCards.filter(c => c !== id));
@@ -71,6 +90,17 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             setSelectedHandCards([...selectedHandCards, id]);
         }
     };
+    // ... (rest of functions)
+
+    // Helper for transparent gradients
+    const getToastBackground = () => {
+        if (gameState.diceRollConfig.success === true) return 'linear-gradient(135deg, rgba(46, 204, 113, 0.85), rgba(39, 174, 96, 0.85))';
+        if (gameState.diceRollConfig.success === false) return 'linear-gradient(135deg, rgba(231, 76, 60, 0.85), rgba(192, 57, 43, 0.85))';
+        if (gameState.diceRollConfig.pending) return 'linear-gradient(135deg, rgba(241, 196, 15, 0.85), rgba(243, 156, 18, 0.85))';
+        return 'linear-gradient(135deg, rgba(149, 165, 166, 0.85), rgba(127, 140, 141, 0.85))';
+    };
+
+
 
     const handleDiscard = () => {
         if (selectedHandCards.length === 1) {
@@ -390,51 +420,91 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
 
 
-            {/* Bottom Area: Dice Rolling Window (Log moved to top) */}
-            <section style={{ display: 'flex', justifyContent: 'center', minHeight: '100px', marginTop: '10px' }}>
+            {/* Toast Notification for Dice Rolls */}
+            {showToast && (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0) && (
                 <div style={{
-                    width: '100%',
-                    maxWidth: '600px',
+                    position: 'fixed',
+                    top: '20px',
+                    right: '20px',
+                    width: 'auto',
+                    maxWidth: '300px',
+                    minWidth: '250px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '15px',
-                    background: gameState.diceRollConfig.success === true ? 'linear-gradient(135deg, #2ecc71, #27ae60)' : (gameState.diceRollConfig.success === false ? 'linear-gradient(135deg, #e74c3c, #c0392b)' : (gameState.diceRollConfig.pending ? 'linear-gradient(135deg, #f1c40f, #f39c12)' : 'linear-gradient(135deg, #95a5a6, #7f8c8d)')),
-                    borderRadius: '8px',
+                    background: getToastBackground(),
+                    backdropFilter: 'blur(4px)',
+                    borderRadius: '12px',
                     color: 'white',
-                    transition: 'background 0.3s ease',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
+                    boxShadow: '0 5px 15px rgba(0,0,0,0.2)',
+                    zIndex: 2000,
+                    animation: 'slideInRight 0.3s ease-out'
                 }}>
-                    <h3 style={{ margin: '0 0 10px 0' }}>
+                    <button
+                        onClick={() => setShowToast(false)}
+                        style={{
+                            position: 'absolute',
+                            top: '5px',
+                            right: '5px',
+                            background: 'rgba(0,0,0,0.15)',
+                            border: 'none',
+                            color: 'white',
+                            borderRadius: '50%',
+                            width: '20px',
+                            height: '20px',
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontWeight: 'bold',
+                            fontSize: '0.8em',
+                            padding: 0
+                        }}
+                    >✕</button>
+
+                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1em', textAlign: 'center', paddingRight: '15px' }}>
                         {gameState.diceRollConfig.player ?
                             `${gameState.diceRollConfig.player.name} ${gameState.diceRollConfig.player.isBot ? '🤖' : '👤'} `
                             : ''}
                         {gameState.diceRollConfig.targetCardName ? `vs ${gameState.diceRollConfig.targetCardName}: ` : ''}
                         {gameState.diceRollConfig.pending ? 'Rolling...' : (gameState.diceRollConfig.success === true ? 'Success!' : (gameState.diceRollConfig.success === false ? 'Failed!' : (gameState.diceRollConfig.results.length > 0 ? 'Roll Result' : 'Ready to Roll')))}
                     </h3>
-                    {gameState.diceRollConfig.results.length > 0 ? (
+                    {gameState.diceRollConfig.results.length > 0 && (
                         <>
-                            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                            <div style={{ display: 'flex', gap: '5px', marginBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}>
                                 {gameState.diceRollConfig.results.map((val, i) => (
-                                    <DiceFace key={i} value={val} />
+                                    <div key={i} style={{ transform: 'scale(0.8)' }}>
+                                        <DiceFace value={val} />
+                                    </div>
                                 ))}
                             </div>
-                            <div style={{ fontSize: '1.5em', fontWeight: 'bold' }}>
+                            <div style={{ fontSize: '1.2em', fontWeight: 'bold' }}>
                                 Total: {gameState.diceRollConfig.total ?? gameState.diceRollConfig.results.reduce((a, b) => a + b, 0)}
-                                {gameState.diceRollConfig.bonus ? <span style={{ fontSize: '0.6em', color: '#f1c40f', marginLeft: '5px' }}>(+{gameState.diceRollConfig.bonus})</span> : ''}
+                                {gameState.diceRollConfig.bonus ? <span style={{ fontSize: '0.7em', color: '#f1c40f', marginLeft: '3px' }}>(+{gameState.diceRollConfig.bonus})</span> : ''}
                             </div>
                         </>
-                    ) : (
-                        <div style={{ opacity: 0.7, fontStyle: 'italic' }}>Select cards and action to roll</div>
                     )}
                     {gameState.diceRollConfig.required !== undefined && (
-                        <div style={{ fontSize: '1em', marginTop: '5px', opacity: 0.9 }}>
+                        <div style={{ fontSize: '0.9em', marginTop: '2px', opacity: 0.9 }}>
                             Needed: {gameState.diceRollConfig.required}
                         </div>
                     )}
+
+                    {/* Visual Timer Line */}
+                    {!gameState.diceRollConfig.pending && gameState.diceRollConfig.results.length > 0 && (
+                        <div style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            height: '4px',
+                            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                            width: '100%',
+                            borderBottomLeftRadius: '12px',
+                            animation: 'shrinkWidth 5s linear forwards'
+                        }} />
+                    )}
                 </div>
-            </section>
+            )}
 
             {/* Game Over Overlay */}
             {

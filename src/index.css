@@ -103,3 +103,37 @@ button:focus-visible {
   box-shadow: 0 0 15px rgba(241, 196, 15, 0.5), 0 5px 10px rgba(0, 0, 0, 0.3);
   z-index: 10;
 }
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes shrinkWidth {
+  from {
+    width: 100%;
+  }
+
+  to {
+    width: 0%;
+  }
+}
