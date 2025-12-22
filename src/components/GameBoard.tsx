@@ -1,5 +1,4 @@
-
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import type { GameState, AttackType } from '../engine/types';
 import { CardComponent } from './Card';
 import { Probability } from '../engine/Probability';
@@ -50,16 +49,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     const player = gameState.players[gameState.currentPlayerIndex];
     const isMyTurn = !player.isBot; // Assuming index 0 is human usually, or check ID
 
-    const logEndRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (logEndRef.current) {
-            logEndRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [gameState.turnLog.length]);
-
     const [selectedHandCards, setSelectedHandCards] = useState<string[]>([]);
     const [selectedLandscapeCardId, setSelectedLandscapeCardId] = useState<string | null>(null);
+    const [isLogCollapsed, setIsLogCollapsed] = useState(true);
     const selectedLandscapeCard = gameState.landscape.find(c => c.id === selectedLandscapeCardId);
 
     const toggleHandCard = (id: string) => {
@@ -170,23 +162,65 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                 </div>
             </div>
 
+
+            {/* Metrics Bar */}
+            <section style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 20px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', marginBottom: '10px', color: '#ecf0f1', fontSize: '0.9em' }}>
+                <div title="Number of times the deck can be reshuffled">🔄 Shuffles Left: <strong>{3 - gameState.deckCycles}</strong></div>
+                <div title="Number of cards in Bot's hand">🤖 Bot Hand: <strong>{gameState.players.find(p => p.isBot)?.hand.length || 0}</strong></div>
+                <div title="Cards remaining in the Adventure Deck">🃏 Adventure Deck: <strong>{gameState.adventurerDeck.length}</strong></div>
+                <div title="Cards remaining in the Dragonwood Deck">🌲 Landscape Deck: <strong>{gameState.dragonwoodDeck.length}</strong></div>
+            </section>
+
+            {/* Collapsible Game Log */}
+            <section style={{ marginBottom: '10px' }}>
+                <div
+                    onClick={() => setIsLogCollapsed(!isLogCollapsed)}
+                    style={{
+                        background: 'rgba(0,0,0,0.3)',
+                        padding: '8px 15px',
+                        borderRadius: isLogCollapsed ? '8px' : '8px 8px 0 0',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        color: '#ecf0f1',
+                        fontSize: '0.9em'
+                    }}
+                >
+                    <strong>📜 Adventure Log</strong>
+                    <span>{isLogCollapsed ? 'Show ▼' : 'Hide ▲'}</span>
+                </div>
+                {!isLogCollapsed && (
+                    <div style={{
+                        background: 'rgba(0,0,0,0.2)',
+                        padding: '10px',
+                        borderRadius: '0 0 8px 8px',
+                        maxHeight: '150px',
+                        overflowY: 'auto',
+                        borderTop: '1px solid rgba(255,255,255,0.1)'
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column-reverse' }}>
+                            {/* Reverse mapping to show newest first if we want, or keeping standard order but manual scroll */}
+                            {[...gameState.turnLog].reverse().map((log, i) => (
+                                <div key={i} style={{ fontSize: '0.9em', opacity: 0.8, marginBottom: '2px' }}>{log}</div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </section>
+
             {/* Landscape Area */}
             <section>
-                <div style={{ textAlign: 'center', margin: '0 0 10px 0', minHeight: '27px' }}>
-                    {selectedLandscapeCard ? (
-                        <h3 style={{ margin: 0, color: '#f39c12', textShadow: '1px 1px 2px black' }}>
-                            {selectedLandscapeCard.name}
-                            {'victoryPoints' in selectedLandscapeCard && (
-                                <span style={{ fontSize: '0.8em', marginLeft: '10px', color: '#ecf0f1' }}>
-                                    (VP: {(selectedLandscapeCard as any).victoryPoints})
-                                </span>
-                            )}
-                        </h3>
-                    ) : (
-                        <h3 style={{ margin: 0 }}>Dragonwood Landscape</h3>
-                    )}
-                </div>
-                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '30px 10px 10px 10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    overflowX: 'auto',
+                    padding: '30px 10px 10px 10px',
+                    justifyContent: 'center',
+                    flexWrap: 'wrap',
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.1))',
+                    borderRadius: '8px'
+                }}>
                     {gameState.landscape.map(card => (
                         <CardComponent
                             key={card.id}
@@ -339,36 +373,23 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                 </div>
             </section>
 
-            {/* Metrics Bar */}
-            <section style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 20px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', marginTop: '10px', color: '#ecf0f1', fontSize: '0.9em' }}>
-                <div title="Number of times the deck can be reshuffled">🔄 Shuffles Left: <strong>{3 - gameState.deckCycles}</strong></div>
-                <div title="Number of cards in Bot's hand">🤖 Bot Hand: <strong>{gameState.players.find(p => p.isBot)?.hand.length || 0}</strong></div>
-                <div title="Cards remaining in the Adventure Deck">🃏 Adventure Deck: <strong>{gameState.adventurerDeck.length}</strong></div>
-                <div title="Cards remaining in the Dragonwood Deck">🌲 Landscape Deck: <strong>{gameState.dragonwoodDeck.length}</strong></div>
-            </section>
 
-            {/* Middle Area: Dice & Logs */}
-            <section style={{ display: 'flex', gap: '20px', minHeight: '100px', marginTop: '10px' }}>
-                <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', overflowY: 'auto', height: '200px' }}>
-                    <strong>Game Log:</strong>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        {gameState.turnLog.map((log, i) => (
-                            <div key={i} style={{ fontSize: '0.9em', opacity: 0.8 }}>{log}</div>
-                        ))}
-                        <div ref={logEndRef} />
-                    </div>
-                </div>
 
+            {/* Bottom Area: Dice Rolling Window (Log moved to top) */}
+            <section style={{ display: 'flex', justifyContent: 'center', minHeight: '100px', marginTop: '10px' }}>
                 <div style={{
-                    flex: 1,
+                    width: '100%',
+                    maxWidth: '600px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    padding: '15px',
                     background: gameState.diceRollConfig.success === true ? 'linear-gradient(135deg, #2ecc71, #27ae60)' : (gameState.diceRollConfig.success === false ? 'linear-gradient(135deg, #e74c3c, #c0392b)' : (gameState.diceRollConfig.pending ? 'linear-gradient(135deg, #f1c40f, #f39c12)' : 'linear-gradient(135deg, #95a5a6, #7f8c8d)')),
                     borderRadius: '8px',
                     color: 'white',
-                    transition: 'background 0.3s ease'
+                    transition: 'background 0.3s ease',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.2)'
                 }}>
                     <h3 style={{ margin: '0 0 10px 0' }}>
                         {gameState.diceRollConfig.player ?
