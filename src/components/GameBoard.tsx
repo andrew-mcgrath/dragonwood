@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { GameState, AttackType } from '../engine/types';
 import { CardComponent } from './Card';
 import { Probability } from '../engine/Probability';
@@ -54,6 +54,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     const [isLogCollapsed, setIsLogCollapsed] = useState(true);
     const selectedLandscapeCard = gameState.landscape.find(c => c.id === selectedLandscapeCardId);
 
+    // Ref for the log container
+    const logContainerRef = useRef<HTMLDivElement>(null);
+
+    // Scroll to bottom when log is expanded OR when new logs arrive while expanded
+    useEffect(() => {
+        if (!isLogCollapsed && logContainerRef.current) {
+            logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+        }
+    }, [isLogCollapsed, gameState.turnLog.length]);
+
     const toggleHandCard = (id: string) => {
         if (selectedHandCards.includes(id)) {
             setSelectedHandCards(selectedHandCards.filter(c => c !== id));
@@ -98,45 +108,48 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     return (
         <div style={{ padding: '20px', width: '100%', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
 
-            {/* Scoreboard / Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: '#2c3e50', color: 'white', padding: '15px', borderRadius: '12px' }}>
-                <div>
-                    <h1 style={{ margin: '0 0 10px 0', fontSize: '1.5em' }}>🐉🌲 Dragonwood</h1>
-                    <div style={{ fontSize: '1.1em', fontWeight: 'bold', color: '#f39c12' }}>
-                        Current Turn: {player.name}
+            {/* Header: Scores / Turn Info */}
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '15px 20px', borderRadius: '15px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <h2 style={{ margin: 0, textShadow: '2px 2px 4px rgba(0,0,0,0.5)', fontSize: '2em' }}>🐲 Dragonwood</h2>
+                    <div style={{ padding: '5px 15px', background: isMyTurn ? 'linear-gradient(135deg, #2ecc71, #27ae60)' : 'linear-gradient(135deg, #7f8c8d, #34495e)', borderRadius: '20px', fontWeight: 'bold' }}>
+                        {isMyTurn ? "YOUR TURN" : (player.isBot ? "BOT'S TURN" : `${player.name}'s TURN`)}
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '40px' }}>
+                <div style={{ display: 'flex', gap: '15px' }}>
                     {gameState.players.map(p => {
                         const score = p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0);
+                        const isActive = p.id === player.id;
 
-                        // Calculate bonuses for display (duplicated logic for UI safely)
-                        const bonuses = { strike: 0, stomp: 0, scream: 0 };
-                        let hasHoneyPot = false;
-                        p.capturedCards.forEach(c => {
-                            if (c.type === 'enhancement') {
-                                if (c.name === 'Silver Sword') bonuses.strike += 2;
-                                if (c.name === 'Magical Boots') bonuses.stomp += 2;
-                                if (c.name === 'Cloak of Darkness') bonuses.scream += 2;
-                                if (c.name === 'Honey Pot') hasHoneyPot = true;
-                            }
-                        });
+                        // Calculate bonuses for display
+                        const bonuses = {
+                            strike: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0),
+                            stomp: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Boots' ? 2 : 0), 0),
+                            scream: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Cloak of Darkness' ? 2 : 0), 0),
+                        };
+                        const hasHoneyPot = p.capturedCards.some(c => c.name === 'Honey Pot');
 
                         return (
-                            <div key={p.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                            <div key={p.id} style={{
+                                padding: '10px 15px',
+                                background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+                                borderRadius: '10px',
+                                border: isActive ? '2px solid #f1c40f' : '1px solid transparent',
+                                display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px',
+                                minWidth: '120px'
+                            }}>
                                 {editingPlayerId === p.id ? (
-                                    <input
-                                        autoFocus
-                                        value={tempName}
-                                        onChange={(e) => setTempName(e.target.value)}
-                                        onBlur={saveName}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') saveName();
-                                            if (e.key === 'Escape') setEditingPlayerId(null);
-                                        }}
-                                        style={{ fontSize: '1em', padding: '2px', fontWeight: 'bold', width: '120px', textAlign: 'right' }}
-                                    />
+                                    <div style={{ display: 'flex', gap: '5px' }}>
+                                        <input
+                                            value={tempName}
+                                            onChange={(e) => setTempName(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && saveName()}
+                                            autoFocus
+                                            style={{ width: '80px', padding: '2px' }}
+                                        />
+                                        <button onClick={saveName} style={{ fontSize: '0.8em', cursor: 'pointer' }}>💾</button>
+                                    </div>
                                 ) : (
                                     <div
                                         style={{ fontWeight: 'bold', fontSize: '1.2em', marginBottom: '5px', cursor: !p.isBot ? 'pointer' : 'default', textDecoration: !p.isBot ? 'underline' : 'none', color: '#ecf0f1' }}
@@ -160,7 +173,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                         );
                     })}
                 </div>
-            </div>
+            </header>
 
 
             {/* Metrics Bar */}
@@ -191,17 +204,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                     <span>{isLogCollapsed ? 'Show ▼' : 'Hide ▲'}</span>
                 </div>
                 {!isLogCollapsed && (
-                    <div style={{
-                        background: 'rgba(0,0,0,0.2)',
-                        padding: '10px',
-                        borderRadius: '0 0 8px 8px',
-                        maxHeight: '150px',
-                        overflowY: 'auto',
-                        borderTop: '1px solid rgba(255,255,255,0.1)'
-                    }}>
-                        <div style={{ display: 'flex', flexDirection: 'column-reverse' }}>
-                            {/* Reverse mapping to show newest first if we want, or keeping standard order but manual scroll */}
-                            {[...gameState.turnLog].reverse().map((log, i) => (
+                    <div
+                        ref={logContainerRef}
+                        style={{
+                            background: 'rgba(0,0,0,0.2)',
+                            padding: '10px',
+                            borderRadius: '0 0 8px 8px',
+                            maxHeight: '150px',
+                            overflowY: 'auto',
+                            borderTop: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            {/* Standard order: Oldest at top, Newest at bottom */}
+                            {gameState.turnLog.map((log, i) => (
                                 <div key={i} style={{ fontSize: '0.9em', opacity: 0.8, marginBottom: '2px' }}>{log}</div>
                             ))}
                         </div>
