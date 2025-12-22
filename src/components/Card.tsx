@@ -120,8 +120,9 @@ export const CardComponent: React.FC<CardProps> = ({ card, isSelected, onClick }
     } else if (card.type === 'enhancement') {
         const enh = card as Enhancement;
         bgStyle = {
-            background: '#8e44ad',
+            background: '#34495e',
             color: 'white',
+            border: '2px solid #95a5a6',
             padding: 0,
             overflow: 'hidden'
         };
