@@ -1,8 +1,7 @@
-export const DICE_FACES = [1, 2, 2, 3, 3, 4];
+export const DICE_FACES = [1, 2, 3, 4, 5, 6];
 
 export function rollDie(): number {
-    const index = Math.floor(Math.random() * DICE_FACES.length);
-    return DICE_FACES[index];
+    return Math.floor(Math.random() * 6) + 1;
 }
 
 export function rollDice(count: number): number[] {

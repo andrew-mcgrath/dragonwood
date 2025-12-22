@@ -1,6 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import type { GameState, AttackType } from '../engine/types';
 import { CardComponent } from './Card';
+import { Probability } from '../engine/Probability';
+import '../index.css';
+
+
 
 interface GameBoardProps {
     gameState: GameState;
@@ -54,7 +59,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     }, [gameState.turnLog.length]);
 
     const [selectedHandCards, setSelectedHandCards] = useState<string[]>([]);
-    const [selectedLandscapeCard, setSelectedLandscapeCard] = useState<string | null>(null);
+    const [selectedLandscapeCardId, setSelectedLandscapeCardId] = useState<string | null>(null);
+    const selectedLandscapeCard = gameState.landscape.find(c => c.id === selectedLandscapeCardId);
 
     const toggleHandCard = (id: string) => {
         if (selectedHandCards.includes(id)) {
@@ -72,11 +78,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     };
 
     const handleAction = (type: AttackType) => {
-        if (selectedLandscapeCard && selectedHandCards.length > 0) {
-            onCapture(selectedLandscapeCard, type, selectedHandCards);
+        if (selectedLandscapeCardId && selectedHandCards.length > 0) {
+            onCapture(selectedLandscapeCardId, type, selectedHandCards);
             // Reset selection after attempt
             setSelectedHandCards([]);
-            setSelectedLandscapeCard(null);
+            setSelectedLandscapeCardId(null);
         }
     };
 
@@ -164,16 +170,33 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                 </div>
             </div>
 
-            {/* Landscape */}
-            <section style={{ background: 'rgba(0,0,0,0.1)', padding: '20px', borderRadius: '12px' }}>
-                <h3 style={{ margin: '0 0 10px 0' }}>Dragonwood Landscape</h3>
-                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {/* Landscape Area */}
+            <section>
+                <div style={{ textAlign: 'center', margin: '0 0 10px 0', minHeight: '27px' }}>
+                    {selectedLandscapeCard ? (
+                        <h3 style={{ margin: 0, color: '#f39c12', textShadow: '1px 1px 2px black' }}>
+                            {selectedLandscapeCard.name}
+                            {'victoryPoints' in selectedLandscapeCard && (
+                                <span style={{ fontSize: '0.8em', marginLeft: '10px', color: '#ecf0f1' }}>
+                                    (VP: {(selectedLandscapeCard as any).victoryPoints})
+                                </span>
+                            )}
+                        </h3>
+                    ) : (
+                        <h3 style={{ margin: 0 }}>Dragonwood Landscape</h3>
+                    )}
+                </div>
+                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '30px 10px 10px 10px', justifyContent: 'center', flexWrap: 'wrap' }}>
                     {gameState.landscape.map(card => (
                         <CardComponent
                             key={card.id}
                             card={card}
-                            isSelected={selectedLandscapeCard === card.id}
-                            onClick={() => setSelectedLandscapeCard(card.id)}
+                            isSelected={selectedLandscapeCardId === card.id}
+                            onClick={() => {
+                                if (card.type !== 'event') {
+                                    setSelectedLandscapeCardId(selectedLandscapeCardId === card.id ? null : card.id);
+                                }
+                            }}
                         />
                     ))}
                     {gameState.dragonwoodDeck.length > 0 && (
@@ -186,58 +209,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                 </div>
             </section>
 
-            {/* Middle Area: Dice & Logs */}
-            <section style={{ display: 'flex', gap: '20px', minHeight: '100px' }}>
-                <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', overflowY: 'auto', height: '200px' }}>
-                    <strong>Game Log:</strong>
-                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        {gameState.turnLog.map((log, i) => (
-                            <div key={i} style={{ fontSize: '0.9em', opacity: 0.8 }}>{log}</div>
-                        ))}
-                        <div ref={logEndRef} />
-                    </div>
-                </div>
 
-                <div style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: gameState.diceRollConfig.success === true ? 'linear-gradient(135deg, #2ecc71, #27ae60)' : (gameState.diceRollConfig.success === false ? 'linear-gradient(135deg, #e74c3c, #c0392b)' : (gameState.diceRollConfig.pending ? 'linear-gradient(135deg, #f1c40f, #f39c12)' : 'linear-gradient(135deg, #95a5a6, #7f8c8d)')),
-                    borderRadius: '8px',
-                    color: 'white',
-                    transition: 'background 0.3s ease'
-                }}>
-                    <h3 style={{ margin: '0 0 10px 0' }}>
-                        {gameState.diceRollConfig.player ?
-                            `${gameState.diceRollConfig.player.name} ${gameState.diceRollConfig.player.isBot ? '🤖' : '👤'} `
-                            : ''}
-                        {gameState.diceRollConfig.targetCardName ? `vs ${gameState.diceRollConfig.targetCardName}: ` : ''}
-                        {gameState.diceRollConfig.pending ? 'Rolling...' : (gameState.diceRollConfig.success === true ? 'Success!' : (gameState.diceRollConfig.success === false ? 'Failed!' : (gameState.diceRollConfig.results.length > 0 ? 'Roll Result' : 'Ready to Roll')))}
-                    </h3>
-                    {gameState.diceRollConfig.results.length > 0 ? (
-                        <>
-                            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                                {gameState.diceRollConfig.results.map((val, i) => (
-                                    <DiceFace key={i} value={val} />
-                                ))}
-                            </div>
-                            <div style={{ fontSize: '1.5em', fontWeight: 'bold' }}>
-                                Total: {gameState.diceRollConfig.total ?? gameState.diceRollConfig.results.reduce((a, b) => a + b, 0)}
-                                {gameState.diceRollConfig.bonus ? <span style={{ fontSize: '0.6em', color: '#f1c40f', marginLeft: '5px' }}>(+{gameState.diceRollConfig.bonus})</span> : ''}
-                            </div>
-                        </>
-                    ) : (
-                        <div style={{ opacity: 0.7, fontStyle: 'italic' }}>Select cards and action to roll</div>
-                    )}
-                    {gameState.diceRollConfig.required !== undefined && (
-                        <div style={{ fontSize: '1em', marginTop: '5px', opacity: 0.9 }}>
-                            Needed: {gameState.diceRollConfig.required}
-                        </div>
-                    )}
-                </div>
-            </section>
+
+
 
             {/* Player Area */}
             {/* Player Area */}
@@ -286,33 +260,142 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                 <span style={{ fontSize: '0.8em', fontWeight: 'bold', color: '#ecf0f1' }}>Draw</span>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-                                <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards in numerical order (Straight)" style={{
-                                    fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'linear-gradient(135deg, #e74c3c, #c0392b)', color: 'white', border: '2px solid #c0392b', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                }}>
-                                    ⚔️
-                                </button>
+                                <div style={{ position: 'relative' }}>
+                                    <button onClick={() => handleAction('strike')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards in numerical order (Straight)" style={{
+                                        fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        background: 'linear-gradient(135deg, #e74c3c, #c0392b)', color: 'white', border: '2px solid #c0392b', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    }}>
+                                        ⚔️
+                                    </button>
+                                    {isMyTurn && selectedLandscapeCard && selectedHandCards.length > 0 && selectedLandscapeCard.type === 'creature' && (
+                                        <div style={{
+                                            position: 'absolute', top: -10, right: -10,
+                                            background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
+                                            border: '1px solid white'
+                                        }}>
+                                            {(() => {
+                                                const target = (selectedLandscapeCard as any).captureCost.strike;
+                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0);
+                                                const prob = Probability.calculateSuccessChance(selectedHandCards.length, Math.max(1, target - bonus));
+                                                return `${Math.round(prob)}% `;
+                                            })()}
+                                        </div>
+                                    )}
+                                </div>
                                 <span style={{ fontSize: '0.8em', fontWeight: 'bold', color: '#ecf0f1' }}>Strike (Straight)</span>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-                                <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same suit (Flush)" style={{
-                                    fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'linear-gradient(135deg, #e67e22, #d35400)', color: 'white', border: '2px solid #e67e22', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                }}>
-                                    🦶
-                                </button>
+                                <div style={{ position: 'relative' }}>
+                                    <button onClick={() => handleAction('stomp')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same suit (Flush)" style={{
+                                        fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        background: 'linear-gradient(135deg, #e67e22, #d35400)', color: 'white', border: '2px solid #e67e22', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    }}>
+                                        🦶
+                                    </button>
+                                    {isMyTurn && selectedLandscapeCard && selectedHandCards.length > 0 && selectedLandscapeCard.type === 'creature' && (
+                                        <div style={{
+                                            position: 'absolute', top: -10, right: -10,
+                                            background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
+                                            border: '1px solid white'
+                                        }}>
+                                            {(() => {
+                                                const target = (selectedLandscapeCard as any).captureCost.stomp;
+                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Unicorn' ? 2 : 0), 0);
+                                                const prob = Probability.calculateSuccessChance(selectedHandCards.length, Math.max(1, target - bonus));
+                                                return `${Math.round(prob)}% `;
+                                            })()}
+                                        </div>
+                                    )}
+                                </div>
                                 <span style={{ fontSize: '0.8em', fontWeight: 'bold', color: '#ecf0f1' }}>Stomp (Flush)</span>
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-                                <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same value (Kind)" style={{
-                                    fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    background: 'linear-gradient(135deg, #9b59b6, #8e44ad)', color: 'white', border: '2px solid #8e44ad', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                }}>
-                                    😱
-                                </button>
+                                <div style={{ position: 'relative' }}>
+                                    <button onClick={() => handleAction('scream')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Play cards of the same value (Kind)" style={{
+                                        fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        background: 'linear-gradient(135deg, #9b59b6, #8e44ad)', color: 'white', border: '2px solid #8e44ad', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                    }}>
+                                        😱
+                                    </button>
+                                    {isMyTurn && selectedLandscapeCard && selectedHandCards.length > 0 && (selectedLandscapeCard.type === 'creature' || selectedLandscapeCard.type === 'enhancement') && (
+                                        <div style={{
+                                            position: 'absolute', top: -10, right: -10,
+                                            background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
+                                            border: '1px solid white'
+                                        }}>
+                                            {(() => {
+                                                const target = (selectedLandscapeCard as any).captureCost.scream;
+                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Fire Breathing Dragon' ? 2 : 0), 0);
+                                                const prob = Probability.calculateSuccessChance(selectedHandCards.length, Math.max(1, target - bonus));
+                                                return `${Math.round(prob)}% `;
+                                            })()}
+                                        </div>
+                                    )}
+                                </div>
                                 <span style={{ fontSize: '0.8em', fontWeight: 'bold', color: '#ecf0f1' }}>Scream (Kind)</span>
                             </div>
                         </>
+                    )}
+                </div>
+            </section>
+
+            {/* Metrics Bar */}
+            <section style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 20px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', marginTop: '10px', color: '#ecf0f1', fontSize: '0.9em' }}>
+                <div title="Number of times the deck can be reshuffled">🔄 Shuffles Left: <strong>{3 - gameState.deckCycles}</strong></div>
+                <div title="Number of cards in Bot's hand">🤖 Bot Hand: <strong>{gameState.players.find(p => p.isBot)?.hand.length || 0}</strong></div>
+                <div title="Cards remaining in the Adventure Deck">🃏 Adventure Deck: <strong>{gameState.adventurerDeck.length}</strong></div>
+                <div title="Cards remaining in the Dragonwood Deck">🌲 Landscape Deck: <strong>{gameState.dragonwoodDeck.length}</strong></div>
+            </section>
+
+            {/* Middle Area: Dice & Logs */}
+            <section style={{ display: 'flex', gap: '20px', minHeight: '100px', marginTop: '10px' }}>
+                <div style={{ flex: 1, background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', overflowY: 'auto', height: '200px' }}>
+                    <strong>Game Log:</strong>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        {gameState.turnLog.map((log, i) => (
+                            <div key={i} style={{ fontSize: '0.9em', opacity: 0.8 }}>{log}</div>
+                        ))}
+                        <div ref={logEndRef} />
+                    </div>
+                </div>
+
+                <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: gameState.diceRollConfig.success === true ? 'linear-gradient(135deg, #2ecc71, #27ae60)' : (gameState.diceRollConfig.success === false ? 'linear-gradient(135deg, #e74c3c, #c0392b)' : (gameState.diceRollConfig.pending ? 'linear-gradient(135deg, #f1c40f, #f39c12)' : 'linear-gradient(135deg, #95a5a6, #7f8c8d)')),
+                    borderRadius: '8px',
+                    color: 'white',
+                    transition: 'background 0.3s ease'
+                }}>
+                    <h3 style={{ margin: '0 0 10px 0' }}>
+                        {gameState.diceRollConfig.player ?
+                            `${gameState.diceRollConfig.player.name} ${gameState.diceRollConfig.player.isBot ? '🤖' : '👤'} `
+                            : ''}
+                        {gameState.diceRollConfig.targetCardName ? `vs ${gameState.diceRollConfig.targetCardName}: ` : ''}
+                        {gameState.diceRollConfig.pending ? 'Rolling...' : (gameState.diceRollConfig.success === true ? 'Success!' : (gameState.diceRollConfig.success === false ? 'Failed!' : (gameState.diceRollConfig.results.length > 0 ? 'Roll Result' : 'Ready to Roll')))}
+                    </h3>
+                    {gameState.diceRollConfig.results.length > 0 ? (
+                        <>
+                            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                {gameState.diceRollConfig.results.map((val, i) => (
+                                    <DiceFace key={i} value={val} />
+                                ))}
+                            </div>
+                            <div style={{ fontSize: '1.5em', fontWeight: 'bold' }}>
+                                Total: {gameState.diceRollConfig.total ?? gameState.diceRollConfig.results.reduce((a, b) => a + b, 0)}
+                                {gameState.diceRollConfig.bonus ? <span style={{ fontSize: '0.6em', color: '#f1c40f', marginLeft: '5px' }}>(+{gameState.diceRollConfig.bonus})</span> : ''}
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ opacity: 0.7, fontStyle: 'italic' }}>Select cards and action to roll</div>
+                    )}
+                    {gameState.diceRollConfig.required !== undefined && (
+                        <div style={{ fontSize: '1em', marginTop: '5px', opacity: 0.9 }}>
+                            Needed: {gameState.diceRollConfig.required}
+                        </div>
                     )}
                 </div>
             </section>
