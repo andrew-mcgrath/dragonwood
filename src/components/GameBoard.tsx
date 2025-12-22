@@ -94,10 +94,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
     // Helper for transparent gradients
     const getToastBackground = () => {
-        if (gameState.diceRollConfig.success === true) return 'linear-gradient(135deg, rgba(46, 204, 113, 0.85), rgba(39, 174, 96, 0.85))';
-        if (gameState.diceRollConfig.success === false) return 'linear-gradient(135deg, rgba(231, 76, 60, 0.85), rgba(192, 57, 43, 0.85))';
-        if (gameState.diceRollConfig.pending) return 'linear-gradient(135deg, rgba(241, 196, 15, 0.85), rgba(243, 156, 18, 0.85))';
-        return 'linear-gradient(135deg, rgba(149, 165, 166, 0.85), rgba(127, 140, 141, 0.85))';
+        if (gameState.diceRollConfig.success === true) return 'linear-gradient(135deg, rgba(46, 204, 113, 0.6), rgba(39, 174, 96, 0.6))';
+        if (gameState.diceRollConfig.success === false) return 'linear-gradient(135deg, rgba(231, 76, 60, 0.6), rgba(192, 57, 43, 0.6))';
+        if (gameState.diceRollConfig.pending) return 'linear-gradient(135deg, rgba(241, 196, 15, 0.6), rgba(243, 156, 18, 0.6))';
+        return 'linear-gradient(135deg, rgba(149, 165, 166, 0.6), rgba(127, 140, 141, 0.6))';
     };
 
 
@@ -205,54 +205,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                 </div>
             </header>
 
-
-            {/* Metrics Bar */}
-            <section style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 20px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', marginBottom: '10px', color: '#ecf0f1', fontSize: '0.9em' }}>
-                <div title="Number of times the deck can be reshuffled">🔄 Shuffles Left: <strong>{3 - gameState.deckCycles}</strong></div>
-                <div title="Number of cards in Bot's hand">🤖 Bot Hand: <strong>{gameState.players.find(p => p.isBot)?.hand.length || 0}</strong></div>
-                <div title="Cards remaining in the Adventure Deck">🃏 Adventure Deck: <strong>{gameState.adventurerDeck.length}</strong></div>
-                <div title="Cards remaining in the Dragonwood Deck">🌲 Landscape Deck: <strong>{gameState.dragonwoodDeck.length}</strong></div>
-            </section>
-
-            {/* Collapsible Game Log */}
-            <section style={{ marginBottom: '10px' }}>
-                <div
-                    onClick={() => setIsLogCollapsed(!isLogCollapsed)}
-                    style={{
-                        background: 'rgba(0,0,0,0.3)',
-                        padding: '8px 15px',
-                        borderRadius: isLogCollapsed ? '8px' : '8px 8px 0 0',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        color: '#ecf0f1',
-                        fontSize: '0.9em'
-                    }}
-                >
-                    <strong>📜 Adventure Log</strong>
-                    <span>{isLogCollapsed ? 'Show ▼' : 'Hide ▲'}</span>
-                </div>
-                {!isLogCollapsed && (
-                    <div
-                        ref={logContainerRef}
-                        style={{
-                            background: 'rgba(0,0,0,0.2)',
-                            padding: '10px',
-                            borderRadius: '0 0 8px 8px',
-                            maxHeight: '150px',
-                            overflowY: 'auto',
-                            borderTop: '1px solid rgba(255,255,255,0.1)'
-                        }}>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            {/* Standard order: Oldest at top, Newest at bottom */}
-                            {gameState.turnLog.map((log, i) => (
-                                <div key={i} style={{ fontSize: '0.9em', opacity: 0.8, marginBottom: '2px' }}>{log}</div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </section>
 
             {/* Landscape Area */}
             <section>
@@ -418,13 +370,61 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                 </div>
             </section>
 
+            {/* Metrics Bar */}
+            <section style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 20px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', marginBottom: '10px', color: '#ecf0f1', fontSize: '0.9em' }}>
+                <div title="Number of times the deck can be reshuffled">🔄 Shuffles Left: <strong>{3 - gameState.deckCycles}</strong></div>
+                <div title="Number of cards in Bot's hand">🤖 Bot Hand: <strong>{gameState.players.find(p => p.isBot)?.hand.length || 0}</strong></div>
+                <div title="Cards remaining in the Adventure Deck">🃏 Adventure Deck: <strong>{gameState.adventurerDeck.length}</strong></div>
+                <div title="Cards remaining in the Dragonwood Deck">🌲 Landscape Deck: <strong>{gameState.dragonwoodDeck.length}</strong></div>
+            </section>
+
+            {/* Collapsible Game Log */}
+            <section style={{ marginBottom: '10px' }}>
+                <div
+                    onClick={() => setIsLogCollapsed(!isLogCollapsed)}
+                    style={{
+                        background: 'rgba(0,0,0,0.3)',
+                        padding: '8px 15px',
+                        borderRadius: isLogCollapsed ? '8px' : '8px 8px 0 0',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        color: '#ecf0f1',
+                        fontSize: '0.9em'
+                    }}
+                >
+                    <strong>📜 Adventure Log</strong>
+                    <span>{isLogCollapsed ? 'Show ▼' : 'Hide ▲'}</span>
+                </div>
+                {!isLogCollapsed && (
+                    <div
+                        ref={logContainerRef}
+                        style={{
+                            background: 'rgba(0,0,0,0.2)',
+                            padding: '10px',
+                            borderRadius: '0 0 8px 8px',
+                            maxHeight: '150px',
+                            overflowY: 'auto',
+                            borderTop: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            {/* Standard order: Oldest at top, Newest at bottom */}
+                            {gameState.turnLog.map((log, i) => (
+                                <div key={i} style={{ fontSize: '0.9em', opacity: 0.8, marginBottom: '2px' }}>{log}</div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </section>
+
 
 
             {/* Toast Notification for Dice Rolls */}
             {showToast && (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0) && (
                 <div style={{
                     position: 'fixed',
-                    top: '20px',
+                    bottom: '20px',
                     right: '20px',
                     width: 'auto',
                     maxWidth: '300px',
