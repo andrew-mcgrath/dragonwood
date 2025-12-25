@@ -15,8 +15,6 @@ interface GameBoardProps {
 }
 
 const DiceFace: React.FC<{ value: number }> = ({ value }) => {
-    // ... (DiceFace implementation)
-    // Basic CSS dice face
     // Dragonwood Dice: 1, 2, 2, 3, 3, 4. Result is pre-calculated engine-side as 1-4.
     // We just render pips for the value.
     const dotMap: Record<number, number[]> = {
@@ -29,17 +27,9 @@ const DiceFace: React.FC<{ value: number }> = ({ value }) => {
     };
 
     return (
-        <div style={{
-            width: '40px', height: '40px', background: 'white', borderRadius: '8px',
-            boxShadow: '2px 2px 5px rgba(0,0,0,0.3)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-            gridTemplateRows: 'repeat(3, 1fr)', padding: '4px', boxSizing: 'border-box', border: '1px solid #bdc3c7'
-        }}>
+        <div className="themed-die">
             {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} style={{
-                    background: dotMap[value]?.includes(i) ? '#e74c3c' : 'transparent',
-                    borderRadius: '50%',
-                    margin: '1px'
-                }} />
+                <div key={i} className={dotMap[value]?.includes(i) ? 'themed-die-pip' : ''} />
             ))}
         </div>
     );
