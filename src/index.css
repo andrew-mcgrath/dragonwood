@@ -137,3 +137,42 @@ button:focus-visible {
     width: 0%;
   }
 }
+
+/* Themed Dice */
+.themed-die {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #8B4513 0%, #A0522D 50%, #6B4226 100%);
+    border-radius: 8px;
+    box-shadow: 
+        inset 0 0 5px rgba(0,0,0,0.5),
+        2px 2px 5px rgba(0,0,0,0.4),
+        0 4px 0 #5D4037;
+    border: 1px solid #5D4037;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    padding: 6px;
+    box-sizing: border-box;
+    position: relative;
+    user-select: none;
+    transition: transform 0.2s;
+}
+
+.themed-die:active {
+    transform: translateY(2px);
+    box-shadow: 
+        inset 0 0 5px rgba(0,0,0,0.5),
+        0 2px 0 #5D4037;
+}
+
+.themed-die-pip {
+    background: radial-gradient(circle at 30% 30%, #FFD700, #DAA520);
+    border-radius: 50%;
+    margin: 1px;
+    box-shadow: inset 1px 1px 1px rgba(0,0,0,0.5);
+    width: 8px;
+    height: 8px;
+    align-self: center;
+    justify-self: center;
+}
