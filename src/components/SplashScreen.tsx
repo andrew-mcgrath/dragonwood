@@ -74,6 +74,7 @@ export const SplashScreen: React.FC<SplashProps> = ({ onStartGame }) => {
                             <input
                                 type="text"
                                 value={name}
+                                maxLength={35}
                                 onChange={(e) => setName(e.target.value)}
                                 style={{
                                     display: 'block', marginTop: '10px', fontSize: '1em', padding: '10px',
@@ -87,6 +88,7 @@ export const SplashScreen: React.FC<SplashProps> = ({ onStartGame }) => {
                             <input
                                 type="text"
                                 value={botName}
+                                maxLength={35}
                                 onChange={(e) => setBotName(e.target.value)}
                                 style={{
                                     display: 'block', marginTop: '10px', fontSize: '1em', padding: '10px',
