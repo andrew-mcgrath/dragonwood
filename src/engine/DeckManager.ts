@@ -62,21 +62,45 @@ const ENHANCEMENTS_DATA: Omit<Enhancement, 'id' | 'type'>[] = [
 
 export function createDragonwoodDeck(): DragonwoodCard[] {
     const deck: DragonwoodCard[] = [];
+    const dragonCards: DragonwoodCard[] = [];
 
     // Add multiple copies of some creatures to fill out the deck
     CREATURES_DATA.forEach((c, idx) => {
-        deck.push({ ...c, id: `creature_${idx}`, type: 'creature' });
-        deck.push({ ...c, id: `creature_${idx}_2`, type: 'creature' }); // Simple duplication for volume
+        const card1 = { ...c, id: `creature_${idx}`, type: 'creature' } as DragonwoodCard;
+        const card2 = { ...c, id: `creature_${idx}_2`, type: 'creature' } as DragonwoodCard;
+
+        if (c.name === 'Dragon') {
+            dragonCards.push(card1);
+            dragonCards.push(card2);
+        } else {
+            deck.push(card1);
+            deck.push(card2);
+        }
     });
 
     ENHANCEMENTS_DATA.forEach((e, idx) => {
-        deck.push({ ...e, id: `enhancement_${idx}`, type: 'enhancement' });
+        deck.push({ ...e, id: `enhancement_${idx}`, type: 'enhancement' } as DragonwoodCard);
     });
 
-    // For simplicity, omitting events in initial basic version or adding limited placeholders
-    // EVENTS_DATA.forEach((ev, idx) => {
-    //     deck.push({ ...ev, id: `event_${idx}`, type: 'event' });
-    // });
+    // 1. Shuffle all non-dragon cards
+    const shuffledNonDragons = shuffle(deck);
 
-    return shuffle(deck);
+    // 2. Calculate the safe zone (top half) based on total cards
+    const totalCards = deck.length + dragonCards.length;
+    const halfIndex = Math.floor(totalCards / 2);
+
+    // Ensure we have enough non-dragon cards for the top half
+    // (In a normal game this is always true, but good to be safe)
+    const splitIndex = Math.min(halfIndex, shuffledNonDragons.length);
+
+    const topHalf = shuffledNonDragons.slice(0, splitIndex);
+    const bottomNonDragons = shuffledNonDragons.slice(splitIndex);
+
+    // 3. Add dragons to bottom half and shuffle ONLY the bottom half
+    // NOTE: Game uses .pop() to draw, so the 'end' of the array is the 'top' of the deck.
+    // Therefore, the Bottom Half (with Dragons) should be at the START of the array.
+    const bottomWithDragons = shuffle([...bottomNonDragons, ...dragonCards]);
+
+    // 4. Combine: Bottom (Start) + Top (End/Draw First)
+    return [...bottomWithDragons, ...topHalf];
 }
