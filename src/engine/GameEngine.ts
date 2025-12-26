@@ -1,6 +1,7 @@
 import { createAdventurerDeck, createDragonwoodDeck } from './DeckManager';
 import { rollDice } from './Dice';
 import type { GameState, Player, PlayerCard, DragonwoodCard, Creature, AttackType } from './types';
+import { generateRandomName } from '../utils/NameGenerator';
 
 export class GameEngine {
     state: GameState;
@@ -50,7 +51,7 @@ export class GameEngine {
 
         const player2: Player = {
             id: 'p2',
-            name: 'Bot',
+            name: generateRandomName(true), // Default random name for safety
             hand: [],
             capturedCards: [],
             isBot: true

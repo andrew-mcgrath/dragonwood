@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
+import { generateRandomName } from '../utils/NameGenerator';
 
 interface SplashProps {
     onStartGame: (playerName: string, botName: string) => void;
 }
 
 export const SplashScreen: React.FC<SplashProps> = ({ onStartGame }) => {
-    const [name, setName] = useState("Player 1");
-    const [botName, setBotName] = useState("Bot");
+    // Generate random defaults once on mount
+    const [name, setName] = useState(() => generateRandomName(false));
+    const [botName, setBotName] = useState(() => generateRandomName(true));
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

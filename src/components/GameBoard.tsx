@@ -35,7 +35,7 @@ const DiceFace: React.FC<{ value: number }> = ({ value }) => {
     );
 };
 
-export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCapture, onPenaltyDiscard, onRenamePlayer }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCapture, onPenaltyDiscard, onRenamePlayer: _onRenamePlayer }) => {
     const player = gameState.players[gameState.currentPlayerIndex];
     const isMyTurn = !player.isBot; // Assuming index 0 is human usually, or check ID
 
