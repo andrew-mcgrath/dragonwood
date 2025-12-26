@@ -555,21 +555,69 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                             </p>
                                         )}
 
-                                        <div style={{ marginBottom: '30px', textAlign: 'left' }}>
+                                        <div style={{ marginBottom: '30px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                             {allPlayers.map((p, i) => (
                                                 <div key={p.id} style={{
-                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                                    padding: '10px', background: i === 0 ? '#f1c40f' : 'white',
-                                                    borderRadius: '8px', marginBottom: '10px',
+                                                    background: i === 0 ? '#f1c40f' : 'white',
+                                                    borderRadius: '12px',
                                                     border: i === 0 ? '3px solid #f39c12' : '1px solid #bdc3c7',
-                                                    fontWeight: i === 0 ? 'bold' : 'normal',
-                                                    color: '#2c3e50'
+                                                    overflow: 'hidden',
+                                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                                 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                        <span style={{ fontSize: '1.5em' }}>{i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')}</span>
-                                                        <span>{p.name} {p.isBot ? '🤖' : '👤'}</span>
+                                                    {/* Player Header */}
+                                                    <div style={{
+                                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                        padding: '12px 20px',
+                                                        background: 'rgba(0,0,0,0.05)',
+                                                        borderBottom: '1px solid rgba(0,0,0,0.1)'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#2c3e50', fontWeight: 'bold' }}>
+                                                            <span style={{ fontSize: '1.5em' }}>{i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')}</span>
+                                                            <span style={{ fontSize: '1.2em' }}>{p.name} {p.isBot ? '🤖' : '👤'}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: '#2c3e50' }}>{p.score} VP</div>
                                                     </div>
-                                                    <span style={{ fontSize: '1.5em' }}>{p.score} VP</span>
+
+                                                    {/* Captured Cards Gallery */}
+                                                    <div style={{ padding: '15px' }}>
+                                                        {p.capturedCards.length > 0 ? (
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                                {p.capturedCards.sort((a, b) => {
+                                                                    const vpA = 'victoryPoints' in a ? (a as any).victoryPoints : 0;
+                                                                    const vpB = 'victoryPoints' in b ? (b as any).victoryPoints : 0;
+                                                                    return vpB - vpA;
+                                                                }).map((card, idx) => {
+                                                                    const vp = 'victoryPoints' in card ? (card as any).victoryPoints : 0;
+                                                                    const isEnhancement = card.type === 'enhancement';
+                                                                    return (
+                                                                        <div key={idx} style={{
+                                                                            display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                                                            width: '70px', height: '90px',
+                                                                            background: isEnhancement ? '#d5f5e3' : '#fadbd8',
+                                                                            border: isEnhancement ? '1px solid #2ecc71' : '1px solid #e74c3c',
+                                                                            borderRadius: '6px', padding: '4px',
+                                                                            justifyContent: 'space-between',
+                                                                            textAlign: 'center', position: 'relative'
+                                                                        }} title={card.name}>
+                                                                            <div style={{ fontSize: '0.6em', lineHeight: '1.1em', fontWeight: 'bold', overflow: 'hidden', color: '#2c3e50' }}>
+                                                                                {card.name}
+                                                                            </div>
+                                                                            <div style={{ fontSize: '1.2em', fontWeight: 'bold', color: isEnhancement ? '#27ae60' : '#c0392b' }}>
+                                                                                {vp > 0 ? vp : '-'}
+                                                                            </div>
+                                                                            <div style={{ fontSize: '0.5em', opacity: 0.7 }}>
+                                                                                {isEnhancement ? 'ITEM' : 'FOE'}
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        ) : (
+                                                            <div style={{ fontStyle: 'italic', opacity: 0.6, textAlign: 'center', fontSize: '0.9em' }}>
+                                                                No cards captured
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
