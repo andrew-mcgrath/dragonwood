@@ -90,7 +90,7 @@ describe('GameEngine', () => {
 
         // 1. Mock Landscape with Dragon
         engine.state.landscape = [{
-            id: 'dragon_1', name: 'Dragon', type: 'creature', victoryPoints: 7,
+            id: 'dragon_1', name: 'Orange Dragon', type: 'creature', victoryPoints: 7,
             captureCost: { strike: 9, stomp: 9, scream: 9 }
         } as any];
 
@@ -138,7 +138,7 @@ describe('GameEngine', () => {
         const engine = new GameEngine();
         const player = engine.state.players[0];
 
-        engine.state.landscape = [{ id: 'd1', name: 'Dragon', type: 'creature' } as any];
+        engine.state.landscape = [{ id: 'd1', name: 'Orange Dragon', type: 'creature' } as any];
 
         // Invalid: Flush but not Straight
         player.hand = [
@@ -190,7 +190,7 @@ describe('GameEngine', () => {
 
         // Mock Dragon Landscape
         engine.state.landscape = [{
-            id: 'd1', name: 'Dragon', type: 'creature',
+            id: 'd1', name: 'Orange Dragon', type: 'creature',
             captureCost: { strike: 9, stomp: 9, scream: 9 }
         } as any];
 
@@ -226,7 +226,7 @@ describe('GameEngine', () => {
         while (!failed && attempts < 50) {
             const eng = new GameEngine();
             const p = eng.state.players[0];
-            eng.state.landscape = [{ id: 'd1', name: 'Dragon', type: 'creature' } as any];
+            eng.state.landscape = [{ id: 'd1', name: 'Orange Dragon', type: 'creature' } as any];
             p.hand = [
                 { id: 'c1', type: 'adventurer', suit: 'red', value: 3 },
                 { id: 'c2', type: 'adventurer', suit: 'red', value: 4 },
@@ -278,5 +278,57 @@ describe('GameEngine', () => {
 
         const score2 = player.capturedCards.reduce((acc, c) => acc + (c as any).victoryPoints, 0);
         expect(score2).toBe(2);
+    });
+    it('should trigger Game Over when both dragons are captured', () => {
+        const engine = new GameEngine();
+        const player = engine.state.players[0];
+
+        // Simulate capturing both dragons
+        player.capturedCards.push({
+            id: 'd1', name: 'Orange Dragon', type: 'creature',
+            victoryPoints: 7, captureCost: { strike: 9, stomp: 9, scream: 9 }
+        } as any);
+
+        player.capturedCards.push({
+            id: 'd2', name: 'Blue Dragon', type: 'creature',
+            victoryPoints: 6, captureCost: { strike: 9, stomp: 9, scream: 9 }
+        } as any);
+
+        // Manually trigger checkGameOver (it's private, but we can call a method that calls it, 
+        // OR we can simulate a turn end or capture which triggers checks.
+        // declareCapture -> calls resolveCapture -> calls checkGameOver.
+        // So let's simulate a capture that leads to this state.
+
+        // Reset state for a clean capture action
+        const engine2 = new GameEngine();
+        const p1 = engine2.state.players[0];
+
+        // Give player 1 dragon already
+        p1.capturedCards.push({
+            id: 'd1', name: 'Orange Dragon', type: 'creature',
+            victoryPoints: 7, captureCost: { strike: 1, stomp: 1, scream: 1 }
+        } as any);
+
+        // Put Blue Dragon in landscape to be captured
+        const blueDragon = {
+            id: 'd2', name: 'Blue Dragon', type: 'creature',
+            victoryPoints: 6, captureCost: { strike: 1, stomp: 1, scream: 1 } // Easy capture
+        };
+        engine2.state.landscape = [blueDragon as any];
+
+        // Give player cards to capture it
+        p1.hand = [{ id: 'h1', type: 'adventurer', suit: 'red', value: 5 }] as any;
+
+        // Execute capture
+        engine2.state.phase = 'action';
+        engine2.state.currentPlayerIndex = 0;
+
+        // Mock dice roll to ensure success? 
+        // Since cost is 1, and 1 die (min 1) will always succeed.
+        engine2.declareCapture('d2', 'strike', ['h1']);
+
+        // Check if game over
+        expect(engine2.state.phase).toBe('game_over');
+        expect(engine2.state.turnLog.some(l => l.includes('Both Dragons have been defeated!'))).toBe(true);
     });
 });

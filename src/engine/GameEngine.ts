@@ -225,7 +225,7 @@ export class GameEngine {
             isValid = adventurerCards.every(c => c.value === val);
         } else if (attackType === 'dragon_spell') {
             // Specific: Target must be Dragon, Cards must be 3, Straight Flush
-            if (targetCard.name !== 'Dragon') {
+            if (targetCard.name !== 'Orange Dragon' && targetCard.name !== 'Blue Dragon') {
                 throw new Error("Dragon Spell can only be used on a Dragon!");
             }
             if (adventurerCards.length !== 3) {
@@ -464,7 +464,7 @@ export class GameEngine {
     private checkGameOver(): boolean {
         // Condition 1: Both Dragons captured
         const totalDragons = this.state.players.reduce((sum, p) =>
-            sum + p.capturedCards.filter(c => c.name === 'Dragon').length, 0);
+            sum + p.capturedCards.filter(c => c.name === 'Orange Dragon' || c.name === 'Blue Dragon').length, 0);
 
         if (totalDragons >= 2) {
             this.triggerGameOver("Both Dragons have been defeated!");

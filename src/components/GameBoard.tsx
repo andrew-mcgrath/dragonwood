@@ -412,7 +412,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                     }}>
                                         🪄
                                     </button>
-                                    {isMyTurn && selectedLandscapeCard?.name === 'Dragon' && selectedHandCards.length > 0 && (
+                                    {isMyTurn && (selectedLandscapeCard?.name === 'Orange Dragon' || selectedLandscapeCard?.name === 'Blue Dragon') && selectedHandCards.length > 0 && (
                                         <div style={{
                                             position: 'absolute', top: -10, right: -10,
                                             background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
@@ -702,7 +702,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                                                 }).map((card, idx) => {
                                                                     const vp = 'victoryPoints' in card ? (card as any).victoryPoints : 0;
                                                                     const isEnhancement = card.type === 'enhancement';
-                                                                    const isDragon = card.name === 'Dragon';
+                                                                    const isDragon = card.name === 'Orange Dragon' || card.name === 'Blue Dragon';
                                                                     const imagePath = (card as any).image ? `/images/${(card as any).image}.png` : (isDragon ? '/images/dragon.png' : null);
 
                                                                     return (
