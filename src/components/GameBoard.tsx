@@ -53,9 +53,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     useEffect(() => {
         if (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0) {
             setShowToast(true);
-            setGenericToast(prev => ({ ...prev, visible: false })); // Hide generic toast if dice roll starts
+            setGenericToast(prev => ({ ...prev, visible: false }));
         }
     }, [gameState.diceRollConfig.pending, gameState.diceRollConfig.results]);
+
+    // Handle Engine Notifications (Bot & Player Actions)
+    useEffect(() => {
+        if (gameState.latestNotification) {
+            setGenericToast({
+                message: gameState.latestNotification.message,
+                visible: true,
+                type: gameState.latestNotification.type
+            });
+        }
+    }, [gameState.latestNotification?.id]); // Only trigger on ID change
 
     // Scroll to bottom when log is expanded OR when new logs arrive while expanded
     useEffect(() => {
@@ -133,7 +144,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
     const handleDraw = () => {
         onDraw();
-        setGenericToast({ message: `${player.name} drew a card!`, visible: true, type: 'info' });
     };
 
 
