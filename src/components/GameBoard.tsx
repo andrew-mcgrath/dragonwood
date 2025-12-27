@@ -53,9 +53,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     useEffect(() => {
         if (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0) {
             setShowToast(true);
-            setGenericToast(prev => ({ ...prev, visible: false })); // Hide generic toast if dice roll starts
+            setGenericToast(prev => ({ ...prev, visible: false }));
         }
     }, [gameState.diceRollConfig.pending, gameState.diceRollConfig.results]);
+
+    // Handle Engine Notifications (Bot & Player Actions)
+    useEffect(() => {
+        if (gameState.latestNotification) {
+            setGenericToast({
+                message: gameState.latestNotification.message,
+                visible: true,
+                type: gameState.latestNotification.type
+            });
+        }
+    }, [gameState.latestNotification?.id]); // Only trigger on ID change
 
     // Scroll to bottom when log is expanded OR when new logs arrive while expanded
     useEffect(() => {
@@ -109,23 +120,30 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             return;
         }
         if (selectedHandCards.length === 1) {
-            onPenaltyDiscard(selectedHandCards[0]);
-            setSelectedHandCards([]);
+            try {
+                onPenaltyDiscard(selectedHandCards[0]);
+                setSelectedHandCards([]);
+            } catch (err: any) {
+                setGenericToast({ message: `⚠️ ${err.message}`, visible: true, type: 'error' });
+            }
         }
     };
 
     const handleAction = (type: AttackType) => {
         if (selectedLandscapeCardId && selectedHandCards.length > 0) {
-            onCapture(selectedLandscapeCardId, type, selectedHandCards);
-            // Reset selection after attempt
-            setSelectedHandCards([]);
-            setSelectedLandscapeCardId(null);
+            try {
+                onCapture(selectedLandscapeCardId, type, selectedHandCards);
+                // Reset selection after attempt
+                setSelectedHandCards([]);
+                setSelectedLandscapeCardId(null);
+            } catch (err: any) {
+                setGenericToast({ message: `⚠️ ${err.message}`, visible: true, type: 'error' });
+            }
         }
     };
 
     const handleDraw = () => {
         onDraw();
-        setGenericToast({ message: `${player.name} drew a card!`, visible: true, type: 'info' });
     };
 
 
@@ -484,7 +502,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             </>
                         )}
                     </h3>
-                    {!genericToast.visible && gameState.diceRollConfig.results.length > 0 && (
+                    {showToast && gameState.diceRollConfig.results.length > 0 && (
                         <>
                             <div style={{ display: 'flex', gap: '5px', marginBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}>
                                 {gameState.diceRollConfig.results.map((val, i) => (
@@ -499,7 +517,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             </div>
                         </>
                     )}
-                    {!genericToast.visible && gameState.diceRollConfig.required !== undefined && (
+                    {showToast && gameState.diceRollConfig.required !== undefined && (
                         <div style={{ fontSize: '0.9em', marginTop: '2px', opacity: 0.9 }}>
                             Needed: {gameState.diceRollConfig.required}
                         </div>

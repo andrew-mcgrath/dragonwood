@@ -90,4 +90,9 @@ export interface GameState {
   turnLog: string[];
   deckCycles: number;
   finalTurnsLeft?: number;
+  latestNotification: {
+    message: string;
+    type: 'info' | 'error' | 'success';
+    id: number; // Simple counter to force updates
+  } | null;
 }

@@ -54,4 +54,34 @@ describe('GameEngine', () => {
         // Currently, without the fix, it will be 2 (from Silver Sword)
         expect(engine.state.diceRollConfig.bonus).toBe(0);
     });
+    it('should limit capture attempts to a maximum of 6 cards (dice)', () => {
+        const player = engine.state.players[0];
+
+        // Setup target
+        const targetCreature: import('./types').Creature = {
+            id: 'c1', type: 'creature', name: 'Big Monster', victoryPoints: 5,
+            captureCost: { strike: 15, stomp: 15, scream: 15 } // High cost
+        };
+        engine.state.landscape.push(targetCreature);
+
+        // Give player 7 cards for a valid Scream (all value 1)
+        player.hand = [
+            { id: '1', type: 'adventurer', suit: 'red', value: 1 },
+            { id: '2', type: 'adventurer', suit: 'blue', value: 1 },
+            { id: '3', type: 'adventurer', suit: 'green', value: 1 },
+            { id: '4', type: 'adventurer', suit: 'orange', value: 1 },
+            { id: '5', type: 'adventurer', suit: 'purple', value: 1 },
+            { id: '6', type: 'adventurer', suit: 'red', value: 1 },
+            { id: '7', type: 'adventurer', suit: 'blue', value: 1 }
+        ];
+
+        engine.state.phase = 'action';
+        engine.state.currentPlayerIndex = 0;
+
+        // Attempt to use 7 cards
+        // Should throw error or be invalid
+        expect(() => {
+            engine.declareCapture(targetCreature.id, 'scream', ['1', '2', '3', '4', '5', '6', '7']);
+        }).toThrow("Max 6 cards allowed");
+    });
 });

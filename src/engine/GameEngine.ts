@@ -98,7 +98,8 @@ export class GameEngine {
             diceRollConfig: { count: 0, pending: false, results: [] },
             phase: 'action', // Start with action phase
             turnLog: ['Game Started'],
-            deckCycles: 1
+            deckCycles: 1,
+            latestNotification: null
         };
     }
 
@@ -112,6 +113,14 @@ export class GameEngine {
         this.performDraw(player);
 
         this.endTurn();
+    }
+
+    private setNotification(message: string, type: 'info' | 'error' | 'success') {
+        this.state.latestNotification = {
+            message,
+            type,
+            id: Date.now() + Math.random()
+        };
     }
 
     // Helper to handle drawing and Ladybug recursion
@@ -147,6 +156,7 @@ export class GameEngine {
         if (card) {
             if (card.type === 'lucky_ladybug') {
                 this.state.turnLog.push(`${player.name} drew a Lucky Ladybug! 🐞 Discarding and drawing 2 more...`);
+                this.setNotification(`${player.name} found a Ladybug! 🐞`, 'success');
                 this.state.discardPile.push(card);
 
                 // Draw 2 more recursively
@@ -155,6 +165,11 @@ export class GameEngine {
             } else {
                 player.hand.push(card);
                 this.state.turnLog.push(`${player.name} drew ${card.value} ${card.suit}`);
+                // Only notify if it's the bot, or unified? Unified is better.
+                // But "You drew 1 red" might be too verbose?
+                // Step 728 shows user handled raw draw toast: "player.name drew a card!"
+                // So I should replicate that.
+                this.setNotification(`${player.name} drew a card!`, 'info');
             }
         }
     }
@@ -174,6 +189,10 @@ export class GameEngine {
         const cardsToPlay = player.hand.filter(c => cardIdsToPlay.includes(c.id));
         if (cardsToPlay.length !== cardIdsToPlay.length) {
             throw new Error("Invalid cards selected");
+        }
+
+        if (cardsToPlay.length > 6) {
+            throw new Error("Max 6 cards allowed");
         }
 
         // Remove Lucky Ladybugs from selection logic if selected (shouldn't be select-able for attack usually, but handle it)
@@ -282,6 +301,7 @@ export class GameEngine {
         if (total >= required) {
             // Success
             this.state.turnLog.push("Capture Successful!");
+            this.setNotification(`${player.name} Captured ${targetCard.name}!`, 'success');
             player.capturedCards.push(targetCard);
             this.state.landscape = this.state.landscape.filter(c => c.id !== cardId);
 
@@ -297,6 +317,7 @@ export class GameEngine {
         } else {
             // Fail
             this.state.turnLog.push("Capture Failed!");
+            this.setNotification(`${player.name} Failed Capture!`, 'error');
             // Penalty: Discard 1 card (Adventurer Card)
             // Rule: "If you fail, take the cards you played back into your hand. Then you must discard one Adventurer card from your hand as a penalty."
 
@@ -328,6 +349,7 @@ export class GameEngine {
         player.hand.splice(cardIndex, 1);
         this.state.discardPile.push(card);
         this.state.turnLog.push(`${player.name} discarded a penalty card.`);
+        this.setNotification(`${player.name} discarded a penalty card.`, 'info');
 
         this.endTurn();
     }
@@ -389,7 +411,7 @@ export class GameEngine {
 
     private runBotTurn() {
         this.state.turnLog.push("Bot is thinking...");
-        this.notify();
+        this.notify(); // Ensure UI updates to show thinking log if visible
 
         setTimeout(() => {
             const bot = this.state.players[this.state.currentPlayerIndex];
