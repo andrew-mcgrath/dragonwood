@@ -401,6 +401,29 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                     }}>
                                         🪄
                                     </button>
+                                    {isMyTurn && selectedLandscapeCard?.name === 'Dragon' && selectedHandCards.length === 3 && (
+                                        <div style={{
+                                            position: 'absolute', top: -10, right: -10,
+                                            background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
+                                            border: '1px solid white'
+                                        }}>
+                                            {(() => {
+                                                // Re-validate strictly for visual feedback
+                                                const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
+                                                // Check Flush
+                                                const isFlush = cards.every(c => c.suit === cards[0].suit);
+                                                // Check Straight
+                                                const sorted = [...cards].sort((a, b) => a.value - b.value);
+                                                let isStraight = true;
+                                                for (let i = 0; i < sorted.length - 1; i++) {
+                                                    if (sorted[i + 1].value !== sorted[i].value + 1) isStraight = false;
+                                                }
+
+                                                if (isFlush && isStraight) return "100%";
+                                                return "0%";
+                                            })()}
+                                        </div>
+                                    )}
                                 </div>
                                 <span style={{ fontSize: '0.8em', fontWeight: 'bold', color: '#ecf0f1' }}>Dragon Spell</span>
                             </div>
