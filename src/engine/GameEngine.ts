@@ -257,9 +257,9 @@ export class GameEngine {
         // Check for enhancements (TODO)
         let diceCount = adventurerCards.length; // + enhancements
 
-        // Dragon Spell: No dice needed really, but let's say 0 to instant win
+        // Dragon Spell: Roll dice for visual flair, even though success is guaranteed
         if (attackType === 'dragon_spell') {
-            diceCount = 0;
+            diceCount = adventurerCards.length;
         }
 
         // Update state to rolling
