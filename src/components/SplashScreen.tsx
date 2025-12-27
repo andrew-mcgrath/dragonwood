@@ -67,6 +67,20 @@ export const SplashScreen: React.FC<SplashProps> = ({ onStartGame }) => {
                     </div>
                 </div>
 
+                <div style={{ marginTop: '20px', background: 'rgba(52, 152, 219, 0.2)', padding: '20px', borderRadius: '15px', border: '1px solid rgba(52, 152, 219, 0.4)' }}>
+                    <h3 style={{ marginTop: 0, color: '#3498db', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        🪄 Special Move: Dragon Spell
+                    </h3>
+                    <p style={{ margin: '0 0 10px 0' }}>
+                        Capture a <strong>Dragon</strong> instantly by playing a <strong>3-card Straight Flush</strong> (e.g. Red 3, 4, 5).
+                    </p>
+                    <div style={{ display: 'flex', gap: '15px', fontSize: '0.9em', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
+                        <span>🎲 <strong>Roll:</strong> 2 Dice</span>
+                        <span>🎯 <strong>Target:</strong> 6+</span>
+                        <span>⚠️ <strong>Risk:</strong> Discard 2 cards on failure</span>
+                    </div>
+                </div>
+
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
                     <div style={{ display: 'flex', gap: '40px' }}>
                         <label style={{ fontSize: '1.2em', textAlign: 'center' }}>

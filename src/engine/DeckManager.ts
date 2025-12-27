@@ -41,6 +41,14 @@ export function createAdventurerDeck(): PlayerCard[] {
 }
 
 // Data for Dragonwood Deck
+// // FOR VERIFICATION ONLY: Tiny Deck
+// const CREATURES_DATA: Omit<Creature, 'id' | 'type'>[] = [
+//     { name: 'Dragon', victoryPoints: 7, captureCost: { strike: 9, stomp: 9, scream: 9 }, image: 'dragon' },
+//     { name: 'Spooky Spiders', victoryPoints: 1, captureCost: { strike: 1, stomp: 1, scream: 1 }, image: 'spooky_spiders' }, // Easy capture to end game
+// ];
+
+// const ENHANCEMENTS_DATA: Omit<Enhancement, 'id' | 'type'>[] = [];
+
 const CREATURES_DATA: Omit<Creature, 'id' | 'type'>[] = [
     { name: 'Fire Ant', victoryPoints: 2, captureCost: { strike: 3, stomp: 4, scream: 5 }, image: 'fire_ant' },
     { name: 'Gooey Glob', victoryPoints: 3, captureCost: { strike: 4, stomp: 5, scream: 6 }, image: 'gooey_glob' },
@@ -54,9 +62,9 @@ const CREATURES_DATA: Omit<Creature, 'id' | 'type'>[] = [
 ];
 
 const ENHANCEMENTS_DATA: Omit<Enhancement, 'id' | 'type'>[] = [
-    { name: 'Silver Sword', effectDescription: 'Add +2 to all Strikes', victoryPoints: 2, captureCost: { strike: 5, stomp: 99, scream: 99 }, image: 'silver_sword' }, // Approximate
-    { name: 'Cloak of Darkness', effectDescription: 'Add +2 to all Screams', victoryPoints: 2, captureCost: { strike: 99, stomp: 99, scream: 5 }, image: 'cloak_of_darkness' },
-    { name: 'Magical Boots', effectDescription: 'Add +2 to all Stomps', victoryPoints: 2, captureCost: { strike: 99, stomp: 5, scream: 99 }, image: 'magical_boots' },
+    { name: 'Silver Sword', effectDescription: 'Add +2 to all Strikes', victoryPoints: 0, captureCost: { strike: 5, stomp: 99, scream: 99 }, image: 'silver_sword' }, // Approximate
+    { name: 'Cloak of Darkness', effectDescription: 'Add +2 to all Screams', victoryPoints: 0, captureCost: { strike: 99, stomp: 99, scream: 5 }, image: 'cloak_of_darkness' },
+    { name: 'Magical Boots', effectDescription: 'Add +2 to all Stomps', victoryPoints: 0, captureCost: { strike: 99, stomp: 5, scream: 99 }, image: 'magical_boots' },
     { name: 'Honey Pot', effectDescription: 'Re-roll any 1', victoryPoints: 0, captureCost: { strike: 4, stomp: 4, scream: 4 }, image: 'honey_pot' },
 ];
 
