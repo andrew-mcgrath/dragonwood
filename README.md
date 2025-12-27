@@ -14,21 +14,22 @@ Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dic
 ## Features implemented
 
 - **Core Gameplay Loop**: Draw cards, manage your hand, and capture landscape cards.
-- **Three Attack Types**:
+- **Four Attack Types**:
     - ⚔️ **Strike**: Straight (Sequential numbers, e.g., 1, 2, 3)
     - 🦶 **Stomp**: Flush (Same color, e.g., all Red)
     - 😱 **Scream**: Kind (Same value, e.g., all 4s)
-- **Enhancements**: Capture magical items like the *Silver Sword*, *Magical Boots*, *Cloak of Darkness*, and *Honey Pot* to gain permanent bonuses to your rolls.
+    - 🪄 **Dragon Spell**: A powerful special attack intended only for Dragons. Requires a **3-card Straight Flush** (e.g., Red 3, 4, 5).
+- **Enhancements**: Capture magical items to gain permanent bonuses:
+    - *Silver Sword*: +2 to all Strikes ⚔️
+    - *Magical Boots*: +2 to all Stomps 🦶
+    - *Ghost Disguise*: +2 to all Screams 😱
+    - *Cloak of Darkness*: +2 to ALL capture attempts (including Dragon Spells) 🥷
+    - *Magical Unicorn*: +1 to ALL capture attempts 🦄
+    - *Honey Pot*: Re-roll any 1s 🍯
 - **Special Mechanics**:
     - **Lucky Ladybug 🐞**: Immediately draw 2 extra cards when drawn.
-    - **Honey Pot 🍯**: Automatically re-rolls any 1s rolled on dice.
-    - **Penalty Discard**: If you fail a capture, you must discard one adventurer card as a penalty.
-- **Bot Opponent 🤖**: Play against a simple AI that draws cards and competes for points (basic implementation).
-- **Dynamic UI**:
-    - Real-time score and bonus display.
-    - Detailed game log with history.
-    - Visual indicators for enhancements and dice rolls.
-- **Bot Opponent 🤖**: Play against a simple AI that draws cards and competes for points (basic implementation).
+    - **Penalty Discard**: If you fail a capture, you must discard one adventurer card as a penalty (2 cards for a failed Dragon Spell!).
+- **Bot Opponent 🤖**: Play against a simple AI that draws cards and competes for points.
 - **Dynamic UI**:
     - Real-time score and bonus display.
     - Detailed game log with history.
@@ -87,10 +88,10 @@ Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dic
 
 1.  **On your turn**, you can either:
     - **Draw a Card**: Click "Draw Card" to add to your hand.
-    - **Capture**: Select a card in the **Landscape** (top row) and select cards from your **Hand** (bottom row) that form a valid attack (Strike, Stomp, or Scream). Then click the corresponding action button.
+    - **Capture**: Select a card in the **Landscape** (top row) and select cards from your **Hand** (bottom row) that form a valid attack (Strike, Stomp, Scream, or Dragon Spell). Then click the corresponding action button.
 2.  **Dice Roll**: The game calculates your dice count (1 per card + bonuses). If your total roll meets or exceeds the capture cost, you win the card!
 3.  **End of Game**: The game ends when:
-    -   Both Dragons represent in the game are captured.
+    -   Both Dragons present in the game are captured.
     -   The Adventure Deck has been exhausted twice (each player gets 1 final turn).
     -   The Dragonwood Deck is empty.
 
