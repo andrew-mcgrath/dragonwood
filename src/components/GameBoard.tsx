@@ -401,13 +401,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                     }}>
                                         🪄
                                     </button>
-                                    {isMyTurn && selectedLandscapeCard?.name === 'Dragon' && selectedHandCards.length === 3 && (
+                                    {isMyTurn && selectedLandscapeCard?.name === 'Dragon' && selectedHandCards.length > 0 && (
                                         <div style={{
                                             position: 'absolute', top: -10, right: -10,
                                             background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
                                             border: '1px solid white', whiteSpace: 'nowrap'
                                         }}>
                                             {(() => {
+                                                if (selectedHandCards.length !== 3) return "0%";
                                                 // Re-validate strictly for visual feedback
                                                 const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
                                                 // Check Flush
@@ -649,7 +650,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                                                 }).map((card, idx) => {
                                                                     const vp = 'victoryPoints' in card ? (card as any).victoryPoints : 0;
                                                                     const isEnhancement = card.type === 'enhancement';
-                                                                    const imagePath = (card as any).image ? `/images/${(card as any).image}.png` : null;
+                                                                    const isDragon = card.name === 'Dragon';
+                                                                    const imagePath = (card as any).image ? `/images/${(card as any).image}.png` : (isDragon ? '/images/dragon.png' : null);
 
                                                                     return (
                                                                         <div key={idx} style={{
@@ -658,7 +660,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                                                             background: imagePath ? `url(${imagePath})` : (isEnhancement ? '#d5f5e3' : '#fadbd8'),
                                                                             backgroundSize: 'cover',
                                                                             backgroundPosition: 'center',
-                                                                            border: isEnhancement ? '1px solid #2ecc71' : '1px solid #e74c3c',
+                                                                            border: isDragon ? '2px solid #8e44ad' : (isEnhancement ? '1px solid #2ecc71' : '1px solid #e74c3c'),
                                                                             borderRadius: '6px', padding: '4px',
                                                                             justifyContent: 'space-between',
                                                                             textAlign: 'center', position: 'relative',
