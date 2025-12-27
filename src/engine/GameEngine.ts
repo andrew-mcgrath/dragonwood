@@ -231,7 +231,12 @@ export class GameEngine {
 
         // Calculate Bonuses
         const bonuses = this.calculateBonuses(player);
-        const bonusValue = bonuses[attackType];
+        let bonusValue = bonuses[attackType];
+
+        // Enhancement bonuses cannot be used to capture other enhancements
+        if (targetCard.type === 'enhancement') {
+            bonusValue = 0;
+        }
 
         // Execute Roll immediately for simplicity
         let results = rollDice(diceCount);
