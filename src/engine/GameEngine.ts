@@ -1,6 +1,6 @@
 import { createAdventurerDeck, createDragonwoodDeck } from './DeckManager';
 import { rollDice } from './Dice';
-import type { GameState, Player, PlayerCard, DragonwoodCard, Creature, AttackType } from './types';
+import type { GameState, Player, PlayerCard, DragonwoodCard, AttackType } from './types';
 import { generateRandomName } from '../utils/NameGenerator';
 
 export class GameEngine {
@@ -219,6 +219,33 @@ export class GameEngine {
             // Kind (same value)
             const val = adventurerCards[0].value;
             isValid = adventurerCards.every(c => c.value === val);
+        } else if (attackType === 'dragon_spell') {
+            // Specific: Target must be Dragon, Cards must be 3, Straight Flush
+            if (targetCard.name !== 'Dragon') {
+                throw new Error("Dragon Spell can only be used on a Dragon!");
+            }
+            if (adventurerCards.length !== 3) {
+                throw new Error("Dragon Spell requires exactly 3 cards!");
+            }
+
+            // Check Flush
+            const suit = adventurerCards[0].suit;
+            const isFlush = adventurerCards.every(c => c.suit === suit);
+
+            // Check Straight
+            adventurerCards.sort((a, b) => a.value - b.value);
+            let isStraight = true;
+            for (let i = 0; i < adventurerCards.length - 1; i++) {
+                if (adventurerCards[i + 1].value !== adventurerCards[i].value + 1) {
+                    isStraight = false;
+                    break;
+                }
+            }
+
+            if (!isFlush || !isStraight) {
+                throw new Error("Dragon Spell requires a generic 3-card Straight Flush!");
+            }
+            isValid = true;
         }
 
         if (!isValid) {
@@ -228,7 +255,12 @@ export class GameEngine {
         // Dice calculation
         // 1 card = 1 die base.
         // Check for enhancements (TODO)
-        const diceCount = adventurerCards.length; // + enhancements
+        let diceCount = adventurerCards.length; // + enhancements
+
+        // Dragon Spell: No dice needed really, but let's say 0 to instant win
+        if (attackType === 'dragon_spell') {
+            diceCount = 0;
+        }
 
         // Update state to rolling
         this.state.phase = 'capture_attempt';
@@ -241,16 +273,25 @@ export class GameEngine {
         };
 
         // Determine Success
-        const required = (targetCard as Creature).captureCost?.[attackType] || 0; // Handle non-creatures?
-        // Enhancements also have cost
+        let required = 0;
+        if (attackType === 'dragon_spell') {
+            required = 0; // Instant success
+        } else {
+            // Check if property exists, otherwise default high
+            const costMap = (targetCard as any).captureCost;
+            required = costMap ? costMap[attackType] || 99 : 99;
+        }
 
         // Check enhancements player owns
         // e.g. +2 to strike
         // For now basics only.
 
         // Calculate Bonuses
-        const bonuses = this.calculateBonuses(player);
-        let bonusValue = bonuses[attackType];
+        let bonusValue = 0;
+        if (attackType !== 'dragon_spell') {
+            const bonuses = this.calculateBonuses(player);
+            bonusValue = bonuses[attackType];
+        }
 
         // Enhancement bonuses cannot be used to capture other enhancements
         if (targetCard.type === 'enhancement') {
