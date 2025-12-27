@@ -530,9 +530,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                         alignItems: 'center', justifyContent: 'center', zIndex: 1000
                     }}>
                         <div style={{
-                            background: '#ecf0f1', padding: '40px', borderRadius: '20px',
+                            background: '#ecf0f1', padding: '30px', borderRadius: '20px',
                             textAlign: 'center', boxShadow: '0 0 30px rgba(230, 126, 34, 0.6)',
-                            maxWidth: '500px', width: '90%'
+                            maxWidth: '900px', width: '90%',
+                            maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column'
                         }}>
                             {(() => {
                                 const allPlayers = gameState.players.map(p => ({
@@ -555,21 +556,79 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                             </p>
                                         )}
 
-                                        <div style={{ marginBottom: '30px', textAlign: 'left' }}>
+                                        <div style={{ marginBottom: '30px', textAlign: 'left', display: 'flex', flexDirection: 'row', gap: '20px', alignItems: 'stretch' }}>
                                             {allPlayers.map((p, i) => (
                                                 <div key={p.id} style={{
-                                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                                    padding: '10px', background: i === 0 ? '#f1c40f' : 'white',
-                                                    borderRadius: '8px', marginBottom: '10px',
+                                                    flex: 1,
+                                                    display: 'flex', flexDirection: 'column',
+                                                    background: i === 0 ? '#f1c40f' : 'white',
+                                                    borderRadius: '12px',
                                                     border: i === 0 ? '3px solid #f39c12' : '1px solid #bdc3c7',
-                                                    fontWeight: i === 0 ? 'bold' : 'normal',
-                                                    color: '#2c3e50'
+                                                    overflow: 'hidden',
+                                                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                                 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                        <span style={{ fontSize: '1.5em' }}>{i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')}</span>
-                                                        <span>{p.name} {p.isBot ? '🤖' : '👤'}</span>
+                                                    {/* Player Header */}
+                                                    <div style={{
+                                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                        padding: '12px 20px',
+                                                        background: 'rgba(0,0,0,0.05)',
+                                                        borderBottom: '1px solid rgba(0,0,0,0.1)'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#2c3e50', fontWeight: 'bold' }}>
+                                                            <span style={{ fontSize: '1.5em' }}>{i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')}</span>
+                                                            <span style={{ fontSize: '1.2em' }}>{p.name} {p.isBot ? '🤖' : '👤'}</span>
+                                                        </div>
+                                                        <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: '#2c3e50' }}>{p.score} VP</div>
                                                     </div>
-                                                    <span style={{ fontSize: '1.5em' }}>{p.score} VP</span>
+
+                                                    {/* Captured Cards Gallery */}
+                                                    <div style={{ padding: '15px' }}>
+                                                        {p.capturedCards.length > 0 ? (
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                                {p.capturedCards.sort((a, b) => {
+                                                                    const vpA = 'victoryPoints' in a ? (a as any).victoryPoints : 0;
+                                                                    const vpB = 'victoryPoints' in b ? (b as any).victoryPoints : 0;
+                                                                    return vpB - vpA;
+                                                                }).map((card, idx) => {
+                                                                    const vp = 'victoryPoints' in card ? (card as any).victoryPoints : 0;
+                                                                    const isEnhancement = card.type === 'enhancement';
+                                                                    const imagePath = (card as any).image ? `/images/${(card as any).image}.png` : null;
+
+                                                                    return (
+                                                                        <div key={idx} style={{
+                                                                            display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                                                            width: '70px', height: '90px',
+                                                                            background: imagePath ? `url(${imagePath})` : (isEnhancement ? '#d5f5e3' : '#fadbd8'),
+                                                                            backgroundSize: 'cover',
+                                                                            backgroundPosition: 'center',
+                                                                            border: isEnhancement ? '1px solid #2ecc71' : '1px solid #e74c3c',
+                                                                            borderRadius: '6px', padding: '4px',
+                                                                            justifyContent: 'space-between',
+                                                                            textAlign: 'center', position: 'relative',
+                                                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                                        }} title={card.name}>
+                                                                            {/* Semi-transparent overlay for readability if image exists */}
+                                                                            {imagePath && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.6)', borderRadius: '5px' }} />}
+
+                                                                            <div style={{ position: 'relative', fontSize: '0.6em', lineHeight: '1.1em', fontWeight: 'bold', overflow: 'hidden', color: '#2c3e50', textShadow: '0 0 2px white' }}>
+                                                                                {card.name}
+                                                                            </div>
+                                                                            <div style={{ position: 'relative', fontSize: '1.2em', fontWeight: 'bold', color: isEnhancement ? '#27ae60' : '#c0392b', textShadow: '0 0 2px white' }}>
+                                                                                {vp > 0 ? vp : '-'}
+                                                                            </div>
+                                                                            <div style={{ position: 'relative', fontSize: '0.5em', opacity: 0.9, fontWeight: 'bold', color: '#2c3e50', textShadow: '0 0 2px white' }}>
+                                                                                {isEnhancement ? 'ITEM' : 'FOE'}
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        ) : (
+                                                            <div style={{ fontStyle: 'italic', opacity: 0.6, textAlign: 'center', fontSize: '0.9em' }}>
+                                                                No cards captured
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
