@@ -1,15 +1,18 @@
+import { DICE_FACES } from './Dice';
+
 export class Probability {
     // Cache for dice probabilities: [numDice][target] = probability
     private static cache: Map<string, number> = new Map();
 
     /**
      * Calculates the probability of rolling >= target with n dice.
-     * Uses Standard 6-sided dice (1-6).
+     * Uses Standard Dragonwood dice via DICE_FACES.
      */
     public static calculateSuccessChance(numDice: number, target: number): number {
         if (numDice <= 0) return 0;
+        // Max roll per die is 4
         if (target <= numDice) return 100; // Minimum roll is 1 per die
-        if (target > numDice * 6) return 0; // Max roll is 6 per die
+        if (target > numDice * 4) return 0; // Max roll is 4 per die
 
         const key = `${numDice}-${target}`;
         if (this.cache.has(key)) {
@@ -17,24 +20,24 @@ export class Probability {
         }
 
         // DP table: dp[i][j] = ways to get sum j with i dice
-        // Max sum for 6 dice (typical max) is 36.
-        // Let's support up to 10 dice comfortably.
-        const maxSum = numDice * 6;
+        // Max sum for numDice dice (max face 4) is numDice * 4.
+        const maxSum = numDice * 4;
         let dp: number[] = new Array(maxSum + 1).fill(0);
 
         // Base case: 1 die
-        for (let i = 1; i <= 6; i++) {
-            dp[i] = 1;
+        for (const face of DICE_FACES) {
+            dp[face] = (dp[face] || 0) + 1;
         }
 
         // Add remaining dice
         for (let d = 2; d <= numDice; d++) {
             const newDp = new Array(maxSum + 1).fill(0);
-            for (let sum = d; sum <= d * 6; sum++) {
-                for (let face = 1; face <= 6; face++) {
-                    if (sum - face >= d - 1) { // Prev sum must be at least d-1
-                        newDp[sum] += dp[sum - face] || 0;
-                    }
+            // Iterate over all possible previous sums
+            for (let sum = 0; sum <= (d - 1) * 4; sum++) {
+                if (!dp[sum]) continue;
+                // Add each face
+                for (const face of DICE_FACES) {
+                    newDp[sum + face] += dp[sum];
                 }
             }
             dp = newDp;

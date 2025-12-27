@@ -1,7 +1,9 @@
-export const DICE_FACES = [1, 2, 3, 4, 5, 6];
+// Standard Dragonwood dice: 1, 2, 2, 3, 3, 4
+export const DICE_FACES = [1, 2, 2, 3, 3, 4];
 
 export function rollDie(): number {
-    return Math.floor(Math.random() * 6) + 1;
+    const randomIndex = Math.floor(Math.random() * DICE_FACES.length);
+    return DICE_FACES[randomIndex];
 }
 
 export function rollDice(count: number): number[] {
