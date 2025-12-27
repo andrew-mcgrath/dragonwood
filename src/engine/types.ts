@@ -90,9 +90,11 @@ export interface GameState {
   turnLog: string[];
   deckCycles: number;
   finalTurnsLeft?: number;
+  penaltyCardsNeeded?: number; // Track how many cards to discard
   latestNotification: {
     message: string;
     type: 'info' | 'error' | 'success';
     id: number; // Simple counter to force updates
   } | null;
 }
+

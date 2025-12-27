@@ -275,7 +275,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                     <h3 style={{ margin: '0 20px 0 0' }}>Your Hand ({gameState.players[0].hand.length})</h3>
                     {gameState.phase === 'penalty_discard' && isMyTurn ? (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <span style={{ color: '#c0392b', fontWeight: 'bold' }}>Capture Failed! Select 1 card to discard:</span>
+                            <span style={{ color: '#c0392b', fontWeight: 'bold' }}>
+                                Capture Failed! Select {gameState.penaltyCardsNeeded || 1} card{(gameState.penaltyCardsNeeded || 1) > 1 ? 's' : ''} to discard:
+                            </span>
                             <button
                                 onClick={handleDiscard}
                                 style={{ background: 'linear-gradient(135deg, #e74c3c, #c0392b)', color: 'white' }}
@@ -595,21 +597,56 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column'
                         }}>
                             {(() => {
-                                const allPlayers = gameState.players.map(p => ({
-                                    ...p,
-                                    score: p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0)
-                                })).sort((a, b) => b.score - a.score);
+                                // 1. Calculate Base Stats
+                                const playersWithStats = gameState.players.map(p => {
+                                    const baseScore = p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0);
+                                    const creatureCount = p.capturedCards.filter(c => c.type === 'creature').length;
+                                    return { ...p, baseScore, creatureCount, bonus: 0, totalScore: 0 };
+                                });
+
+                                // 2. Calculate Creature Bonuses
+                                const maxCreatures = Math.max(...playersWithStats.map(p => p.creatureCount));
+                                // Rule: "whoever has the most gets a bonus... ties get 2 each"
+                                // If everyone has 0, technically they tie for most? Let's assume yes for strict adherence, or maybe >0 check.
+                                // Given the context of "Comparing amount captured", 0 vs 0 is a tie.
+                                const creatureWinners = playersWithStats.filter(p => p.creatureCount === maxCreatures);
+                                if (creatureWinners.length === 1) {
+                                    creatureWinners[0].bonus = 3;
+                                } else {
+                                    creatureWinners.forEach(w => w.bonus = 2);
+                                }
+
+                                // 3. Final Score
+                                playersWithStats.forEach(p => p.totalScore = p.baseScore + p.bonus);
+
+                                // 4. Sort with Tie Breaker
+                                const allPlayers = playersWithStats.sort((a, b) => {
+                                    // Primary: Total Score
+                                    if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
+                                    // Tie Breaker: "whoever captured the most creatures"
+                                    return b.creatureCount - a.creatureCount;
+                                    // If still tied, it remains a tie (stable sort or simple return 0)
+                                });
 
                                 const winner = allPlayers[0];
-                                const isWinner = winner.id === player.id;
+                                const isWinner = winner.id === player.id; // Check if current player is top (Note: could be shared top if tie)
+                                // Strict Tie Check: Is the top player actually tied with the second?
+                                const isTie = allPlayers.length > 1 &&
+                                    allPlayers[0].totalScore === allPlayers[1].totalScore &&
+                                    allPlayers[0].creatureCount === allPlayers[1].creatureCount;
+
+                                // Adjust Title for Tie
+                                let title = isWinner ? '🎉 Victory! 🏆' : '💀 Defeat...';
+                                if (isTie && allPlayers[0].id === player.id) title = '🤝 It\'s a Tie!';
+                                if (isTie && allPlayers[0].id !== player.id && allPlayers[1].id === player.id) title = '🤝 It\'s a Tie!'; // Player is one of the tiers
 
                                 return (
                                     <>
-                                        <h1 style={{ fontSize: '3em', color: isWinner ? '#f1c40f' : '#e74c3c', marginBottom: '10px' }}>
-                                            {isWinner ? '🎉 Victory! 🏆' : '💀 Defeat...'}
+                                        <h1 style={{ fontSize: '3em', color: (isWinner && !isTie) ? '#f1c40f' : (isTie ? '#3498db' : '#e74c3c'), marginBottom: '10px' }}>
+                                            {title}
                                         </h1>
 
-                                        {!isWinner && (
+                                        {(!isWinner && !isTie) && (
                                             <p style={{ fontSize: '1.1em', color: '#7f8c8d', marginBottom: '20px', fontStyle: 'italic' }}>
                                                 "Don't give up! A true adventurer learns from every defeat. Better luck next time!"
                                             </p>
@@ -635,9 +672,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                                     }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#2c3e50', fontWeight: 'bold' }}>
                                                             <span style={{ fontSize: '1.5em' }}>{i === 0 ? '🥇' : (i === 1 ? '🥈' : '🥉')}</span>
-                                                            <span style={{ fontSize: '1.2em' }}>{p.name} {p.isBot ? '🤖' : '👤'}</span>
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <span style={{ fontSize: '1.2em' }}>{p.name} {p.isBot ? '🤖' : '👤'}</span>
+                                                                <span style={{ fontSize: '0.8em', opacity: 0.7, fontWeight: 'normal' }}>Captured Creatures: {p.creatureCount}</span>
+                                                            </div>
                                                         </div>
-                                                        <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: '#2c3e50' }}>{p.score} VP</div>
+                                                        <div style={{ textAlign: 'right' }}>
+                                                            <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: '#2c3e50' }}>{p.totalScore} VP</div>
+                                                            {p.bonus > 0 && <div style={{ fontSize: '0.8em', color: '#27ae60', fontWeight: 'bold' }}>({p.baseScore} + {p.bonus} Bonus)</div>}
+                                                        </div>
                                                     </div>
 
                                                     {/* Captured Cards Gallery */}

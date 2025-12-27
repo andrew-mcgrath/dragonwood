@@ -359,18 +359,28 @@ export class GameEngine {
             // Fail
             this.state.turnLog.push("Capture Failed!");
             this.setNotification(`${player.name} Failed Capture!`, 'error');
-            // Penalty: Discard 1 card (Adventurer Card)
-            // Rule: "If you fail, take the cards you played back into your hand. Then you must discard one Adventurer card from your hand as a penalty."
+
+            // Penalty Logic
+            let penaltyCards = 1;
+            if (attackType === 'dragon_spell') {
+                penaltyCards = 2;
+                this.state.turnLog.push("Dragon Spell Failed! Must discard 2 cards!");
+            } else {
+                this.state.turnLog.push("Must discard 1 card as penalty.");
+            }
 
             if (player.hand.length > 0) {
                 // Change phase to penalty_discard so user must choose
                 this.state.phase = 'penalty_discard';
-                this.state.turnLog.push(`${player.name} must discard a card as penalty.`);
+                this.state.penaltyCardsNeeded = penaltyCards;
+
+                // If player has fewer cards than penalty, clamp it? No, just discard what they have?
+                // Logic in resolve will handle "empty hand"
+
                 this.notify();
                 // Do NOT end turn yet
             } else {
-                // Empty hand, nothing to discard? Rare case (played cards returned to hand, so hand shouldn't be empty unless played 0 cards?)
-                // Played cards ARE returned to hand strictly speaking (they never left really, we just selected them).
+                // Empty hand, nothing to discard
                 this.endTurn();
             }
         }
@@ -392,7 +402,26 @@ export class GameEngine {
         this.state.turnLog.push(`${player.name} discarded a penalty card.`);
         this.setNotification(`${player.name} discarded a penalty card.`, 'info');
 
-        this.endTurn();
+        // Decrement needed
+        if (this.state.penaltyCardsNeeded && this.state.penaltyCardsNeeded > 0) {
+            this.state.penaltyCardsNeeded--;
+        }
+
+        // Check if more needed
+        if (this.state.penaltyCardsNeeded && this.state.penaltyCardsNeeded > 0) {
+            if (player.hand.length === 0) {
+                // Hand empty but more penalty needed -> Stop
+                this.state.penaltyCardsNeeded = 0;
+                this.endTurn();
+            } else {
+                // Continue penalty phase
+                this.setNotification(`Select another card to discard (${this.state.penaltyCardsNeeded} left)`, 'error');
+                this.notify();
+            }
+        } else {
+            // Done
+            this.endTurn();
+        }
     }
 
     private endTurn() {

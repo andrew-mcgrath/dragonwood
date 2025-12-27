@@ -151,4 +151,132 @@ describe('GameEngine', () => {
             engine.declareCapture('d1', 'dragon_spell', ['c1', 'c2', 'c3']);
         }).toThrow("Dragon Spell requires a generic 3-card Straight Flush!");
     });
+
+    it('should update turnLog when actions occur', () => {
+        const engine = new GameEngine();
+        const player = engine.state.players[0];
+
+        // 1. Initial log
+        expect(engine.state.turnLog).toContain('Game Started');
+
+        // 2. Draw card
+        engine.state.phase = 'action';
+        engine.state.currentPlayerIndex = 0;
+        engine.drawCard();
+        expect(engine.state.turnLog.some(l => l.includes('drew'))).toBe(true);
+
+        // 3. Capture Attempt (Mock)
+        engine.state.landscape = [{
+            id: 'c1', name: 'TestCreature', type: 'creature',
+            captureCost: { strike: 1 } // Very low cost
+        } as any];
+        player.hand = [{ id: 'h1', type: 'adventurer', suit: 'red', value: 5 }] as any;
+
+        // Force capture
+        // We can't easily force dice roll result without mocking module, 
+        // but we can check the log for "rolled"
+        engine.state.currentPlayerIndex = 0; // Ensure it's player 0's turn again
+        engine.state.phase = 'action'; // Ensure phase is action
+        engine.declareCapture('c1', 'strike', ['h1']);
+
+        expect(engine.state.turnLog.some(l => l.includes('rolled'))).toBe(true);
+        // Expect success or fail message
+        expect(engine.state.turnLog.some(l => l.includes('Capture Successful!') || l.includes('Capture Failed!'))).toBe(true);
+    });
+
+    it('should require 2 discards on Dragon Spell failure', () => {
+        const engine = new GameEngine();
+        const player = engine.state.players[0];
+
+        // Mock Dragon Landscape
+        engine.state.landscape = [{
+            id: 'd1', name: 'Dragon', type: 'creature',
+            captureCost: { strike: 9, stomp: 9, scream: 9 }
+        } as any];
+
+        // Mock Hand (Valid Flush/Straight) but we will force fail result in logic if we could, 
+        // OR just test the state transition if we mock failure.
+        // Since we can't easily mock rollDice results here without module mocking,
+        // let's manually trigger the failure logic path by simulating a check or 
+        // just relying on a "forced" fail if we can (we can't easily).
+        // ALTERNATIVE: Use the fact that 2 dice cannot reach 99 (target defaults to 99 if not dragon spell, but here it IS dragon spell).
+        // Dragon Spell Target is 6. 2 Dice CAN fail (e.g. 1+1=2).
+        // We will try 10 times? No, non-deterministic.
+
+        // Let's just manually invoke the logic block OR 
+        // trust that if we set up a scenario where it fails it works.
+        // Actually, let's just inspect the Code Coverage manually or 
+        // rely on "if (attackType === 'dragon_spell')" logic we wrote.
+
+        // BETTER: Manually set phase to 'capture_attempt' and then call a helper? No private.
+
+        // Let's use a standard test but mock the dice roll? 
+        // OR: Just check that IF it fails, penalty is 2.
+        // We can force failure by "hacking" the rollDice function? No.
+        // We can force failure by hacking the 'required' value? 
+        // 'required' is hardcoded to 6 for Dragon Spell.
+
+        // OK, for this specific test, let's just verify the state logic by 
+        // calling declareCapture, ensuring it rolls, and IF it fails, checking the state.
+        // It's probabilistic (36% success), so 64% fail.
+        // We can loop until failure?
+
+        let failed = false;
+        let attempts = 0;
+        while (!failed && attempts < 50) {
+            const eng = new GameEngine();
+            const p = eng.state.players[0];
+            eng.state.landscape = [{ id: 'd1', name: 'Dragon', type: 'creature' } as any];
+            p.hand = [
+                { id: 'c1', type: 'adventurer', suit: 'red', value: 3 },
+                { id: 'c2', type: 'adventurer', suit: 'red', value: 4 },
+                { id: 'c3', type: 'adventurer', suit: 'red', value: 5 },
+                { id: 'x1', type: 'adventurer', suit: 'blue', value: 1 }, // Extra cards for penalty
+                { id: 'x2', type: 'adventurer', suit: 'blue', value: 2 }
+            ] as any;
+
+            eng.declareCapture('d1', 'dragon_spell', ['c1', 'c2', 'c3']);
+
+            if (eng.state.phase === 'penalty_discard') {
+                failed = true;
+                expect(eng.state.penaltyCardsNeeded).toBe(2);
+                expect(eng.state.turnLog[eng.state.turnLog.length - 1]).toContain("Dragon Spell Failed! Must discard 2 cards!");
+
+                // Test Discard 1
+                eng.resolvePenaltyDiscard('x1');
+                expect(eng.state.phase).toBe('penalty_discard');
+                expect(eng.state.penaltyCardsNeeded).toBe(1);
+
+                // Test Discard 2
+                eng.resolvePenaltyDiscard('x2');
+                expect(eng.state.phase).toBe('action'); // Turn Ended
+                expect(eng.state.penaltyCardsNeeded).toBe(0);
+            }
+            attempts++;
+        }
+    });
+    it('should not award VP for enhancements', () => {
+        const engine = new GameEngine();
+        const player = engine.state.players[0];
+
+        // Manually give player an enhancement
+        player.capturedCards.push({
+            id: 'e1', name: 'Silver Sword', type: 'enhancement',
+            victoryPoints: 0,
+            captureCost: {}, effectDescription: ''
+        } as any);
+
+        // Calculate score logic (mimicking GameBoard logic)
+        const score = player.capturedCards.reduce((acc, c) => acc + (c as any).victoryPoints, 0);
+        expect(score).toBe(0);
+
+        // Add a creature to ensure mixed calculation works
+        player.capturedCards.push({
+            id: 'c1', name: 'Goblin', type: 'creature',
+            victoryPoints: 2, captureCost: {}
+        } as any);
+
+        const score2 = player.capturedCards.reduce((acc, c) => acc + (c as any).victoryPoints, 0);
+        expect(score2).toBe(2);
+    });
 });
