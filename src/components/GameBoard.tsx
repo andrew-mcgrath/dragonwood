@@ -116,10 +116,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
     const handleAction = (type: AttackType) => {
         if (selectedLandscapeCardId && selectedHandCards.length > 0) {
-            onCapture(selectedLandscapeCardId, type, selectedHandCards);
-            // Reset selection after attempt
-            setSelectedHandCards([]);
-            setSelectedLandscapeCardId(null);
+            try {
+                onCapture(selectedLandscapeCardId, type, selectedHandCards);
+                // Reset selection after attempt
+                setSelectedHandCards([]);
+                setSelectedLandscapeCardId(null);
+            } catch (err: any) {
+                setGenericToast({ message: `⚠️ ${err.message}`, visible: true, type: 'error' });
+            }
         }
     };
 
