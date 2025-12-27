@@ -176,6 +176,10 @@ export class GameEngine {
             throw new Error("Invalid cards selected");
         }
 
+        if (cardsToPlay.length > 6) {
+            throw new Error("Max 6 cards allowed");
+        }
+
         // Remove Lucky Ladybugs from selection logic if selected (shouldn't be select-able for attack usually, but handle it)
         const adventurerCards = cardsToPlay.filter(c => c.type === 'adventurer') as unknown as import('./types').AdventurerCard[];
 
