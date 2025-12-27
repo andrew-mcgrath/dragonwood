@@ -76,6 +76,8 @@ const ENHANCEMENTS_DATA: Omit<Enhancement, 'id' | 'type'>[] = [
     { name: 'Honey Pot', effectDescription: 'Re-roll any 1', victoryPoints: 0, captureCost: { strike: 7, stomp: 5, scream: 7 }, image: 'honey_pot' },
     { name: 'Cloak of Darkness', effectDescription: 'Add +2 to all capture attempts', victoryPoints: 0, captureCost: { strike: 11, stomp: 9, scream: 11 }, image: 'cloak_of_darkness' },
     { name: 'Magical Unicorn', effectDescription: 'Add +1 to all capture attempts', victoryPoints: 0, captureCost: { strike: 8, stomp: 6, scream: 8 }, image: 'magical_unicorn' },
+    { name: 'Lightning Bolt', effectDescription: 'Use only once to add 4 points to any capture attempt', victoryPoints: 0, captureCost: { strike: 7, stomp: 5, scream: 7 }, image: 'lightning_bolt' },
+    { name: 'Friendly Bunny', effectDescription: 'Use only once to roll 1 extra die in a capture attempt', victoryPoints: 0, captureCost: { strike: 4, stomp: 4, scream: 4 }, image: 'friendly_bunny' },
 ];
 
 export function createDragonwoodDeck(): DragonwoodCard[] {

@@ -9,7 +9,7 @@ import '../index.css';
 interface GameBoardProps {
     gameState: GameState;
     onDraw: () => void;
-    onCapture: (cardId: string, attackType: AttackType, cardIdsToPlay: string[]) => void;
+    onCapture: (cardId: string, attackType: AttackType, cardIdsToPlay: string[], consumablesToUse?: string[]) => void;
     onPenaltyDiscard: (cardId: string) => void;
     onRenamePlayer: (playerId: string, newName: string) => void;
 }
@@ -40,6 +40,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     const isMyTurn = !player.isBot; // Assuming index 0 is human usually, or check ID
 
     const [selectedHandCards, setSelectedHandCards] = useState<string[]>([]);
+    const [selectedConsumables, setSelectedConsumables] = useState<string[]>([]);
     const [selectedLandscapeCardId, setSelectedLandscapeCardId] = useState<string | null>(null);
     const [isLogCollapsed, setIsLogCollapsed] = useState(true);
     const [isGameOverLogExpanded, setIsGameOverLogExpanded] = useState(false);
@@ -95,7 +96,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             setSelectedHandCards([...selectedHandCards, id]);
         }
     };
-    // ... (rest of functions)
+
+    const toggleConsumable = (id: string) => {
+        if (selectedConsumables.includes(id)) {
+            setSelectedConsumables(selectedConsumables.filter(c => c !== id));
+        } else {
+            setSelectedConsumables([...selectedConsumables, id]);
+        }
+    };
 
     // Helper for transparent gradients
     const getToastBackground = () => {
@@ -131,11 +139,19 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     };
 
     const handleAction = (type: AttackType) => {
-        if (selectedLandscapeCardId && selectedHandCards.length > 0) {
+        if (selectedLandscapeCardId) {
+            // Basic validation for selection presence (though engine does more)
+            // Need at least 1 card OR dragon spell which might be special but usually needs 3 cards.
+            if (selectedHandCards.length === 0 && selectedConsumables.length === 0) {
+                // Engine validation usually checks for cards, but Dragon Spell uses cards from hand.
+                // Just pass through if we have a target, let engine validate.
+            }
+
             try {
-                onCapture(selectedLandscapeCardId, type, selectedHandCards);
+                onCapture(selectedLandscapeCardId, type, selectedHandCards, selectedConsumables);
                 // Reset selection after attempt
                 setSelectedHandCards([]);
+                setSelectedConsumables([]);
                 setSelectedLandscapeCardId(null);
             } catch (err: any) {
                 setGenericToast({ message: `⚠️ ${err.message}`, visible: true, type: 'error' });
@@ -256,21 +272,28 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             {/* Player Area */}
             {/* Player Area */}
             <section>
-                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '30px 10px 10px 10px' }}>
-                    {[...gameState.players[0].hand].sort((a, b) => {
-                        if (a.type !== 'adventurer' || b.type !== 'adventurer') return 0; // Keep special cards as is or move to end
-                        const suits = ['red', 'orange', 'purple', 'green', 'blue'];
-                        const suitDiff = suits.indexOf(a.suit) - suits.indexOf(b.suit);
-                        if (suitDiff !== 0) return suitDiff;
-                        return a.value - b.value;
-                    }).map(card => (
-                        <CardComponent
-                            key={card.id}
-                            card={card}
-                            isSelected={selectedHandCards.includes(card.id)}
-                            onClick={() => toggleHandCard(card.id)}
-                        />
-                    ))}
+                <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '40px 10px 10px 10px' }}>
+                    {/* Consumables (Left) + Hand (Sorted) */}
+                    {[
+                        ...gameState.players[0].capturedCards.filter(c => c.name === 'Lightning Bolt' || c.name === 'Friendly Bunny'),
+                        ...[...gameState.players[0].hand].sort((a, b) => {
+                            if (a.type !== 'adventurer' || b.type !== 'adventurer') return 0;
+                            const suits = ['red', 'orange', 'purple', 'green', 'blue'];
+                            const suitDiff = suits.indexOf(a.suit) - suits.indexOf(b.suit);
+                            if (suitDiff !== 0) return suitDiff;
+                            return a.value - b.value;
+                        })
+                    ].map(card => {
+                        const isConsumable = card.type === 'enhancement' && (card.name === 'Lightning Bolt' || card.name === 'Friendly Bunny');
+                        return (
+                            <CardComponent
+                                key={card.id}
+                                card={card}
+                                isSelected={isConsumable ? selectedConsumables.includes(card.id) : selectedHandCards.includes(card.id)}
+                                onClick={() => isConsumable ? toggleConsumable(card.id) : toggleHandCard(card.id)}
+                            />
+                        );
+                    })}
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -319,7 +342,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                                 const target = (selectedLandscapeCard as any).captureCost.strike;
                                                 const hasCloakOfDarkness = gameState.players[0].capturedCards.some(c => c.name === 'Cloak of Darkness');
                                                 const hasMagicalUnicorn = gameState.players[0].capturedCards.some(c => c.name === 'Magical Unicorn');
-                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0);
+
+                                                let bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0);
+                                                let extraDice = 0;
+                                                selectedConsumables.forEach(cId => {
+                                                    const card = gameState.players[0].capturedCards.find(c => c.id === cId);
+                                                    if (card?.name === 'Lightning Bolt') bonus += 4;
+                                                    if (card?.name === 'Friendly Bunny') extraDice += 1;
+                                                });
 
                                                 // Validate Strike (Straight)
                                                 const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
@@ -330,7 +360,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                                 }
                                                 if (!isValid) return "0% ";
 
-                                                const prob = Probability.calculateSuccessChance(selectedHandCards.length, Math.max(1, target - bonus));
+                                                const prob = Probability.calculateSuccessChance(selectedHandCards.length + extraDice, Math.max(1, target - bonus));
                                                 return `${Math.round(prob)}% `;
                                             })()}
                                         </div>
@@ -356,14 +386,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                                 const target = (selectedLandscapeCard as any).captureCost.stomp;
                                                 const hasCloakOfDarkness = gameState.players[0].capturedCards.some(c => c.name === 'Cloak of Darkness');
                                                 const hasMagicalUnicorn = gameState.players[0].capturedCards.some(c => c.name === 'Magical Unicorn');
-                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Boots' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0);
+
+                                                let bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Boots' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0);
+                                                let extraDice = 0;
+                                                selectedConsumables.forEach(cId => {
+                                                    const card = gameState.players[0].capturedCards.find(c => c.id === cId);
+                                                    if (card?.name === 'Lightning Bolt') bonus += 4;
+                                                    if (card?.name === 'Friendly Bunny') extraDice += 1;
+                                                });
 
                                                 // Validate Stomp (Flush)
                                                 const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
                                                 const isValid = cards.every(c => c.suit === cards[0].suit);
                                                 if (!isValid) return "0% ";
 
-                                                const prob = Probability.calculateSuccessChance(selectedHandCards.length, Math.max(1, target - bonus));
+                                                const prob = Probability.calculateSuccessChance(selectedHandCards.length + extraDice, Math.max(1, target - bonus));
                                                 return `${Math.round(prob)}% `;
                                             })()}
                                         </div>
@@ -389,14 +426,21 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                                 const target = (selectedLandscapeCard as any).captureCost.scream;
                                                 const hasCloakOfDarkness = gameState.players[0].capturedCards.some(c => c.name === 'Cloak of Darkness');
                                                 const hasMagicalUnicorn = gameState.players[0].capturedCards.some(c => c.name === 'Magical Unicorn');
-                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Ghost Disguise' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0);
+
+                                                let bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Ghost Disguise' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0);
+                                                let extraDice = 0;
+                                                selectedConsumables.forEach(cId => {
+                                                    const card = gameState.players[0].capturedCards.find(c => c.id === cId);
+                                                    if (card?.name === 'Lightning Bolt') bonus += 4;
+                                                    if (card?.name === 'Friendly Bunny') extraDice += 1;
+                                                });
 
                                                 // Validate Scream (Kind)
                                                 const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
                                                 const isValid = cards.every(c => c.value === cards[0].value);
                                                 if (!isValid) return "0% ";
 
-                                                const prob = Probability.calculateSuccessChance(selectedHandCards.length, Math.max(1, target - bonus));
+                                                const prob = Probability.calculateSuccessChance(selectedHandCards.length + extraDice, Math.max(1, target - bonus));
                                                 return `${Math.round(prob)}% `;
                                             })()}
                                         </div>
@@ -432,8 +476,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                                 }
 
                                                 if (isFlush && isStraight) {
+                                                    let bonus = 0; // Does Lightning Bolt apply to Dragon Spell? Yes.
+                                                    let extraDice = 0;
+                                                    selectedConsumables.forEach(cId => {
+                                                        const card = gameState.players[0].capturedCards.find(c => c.id === cId);
+                                                        if (card?.name === 'Lightning Bolt') bonus += 4;
+                                                        if (card?.name === 'Friendly Bunny') extraDice += 1;
+                                                    });
+
                                                     // Dragon Spell: 2 Dice, Target 6
-                                                    const prob = Probability.calculateSuccessChance(2, 6);
+                                                    const prob = Probability.calculateSuccessChance(2 + extraDice, Math.max(1, 6 - bonus));
                                                     return `${Math.round(prob)}%`;
                                                 }
                                                 return "0%";

@@ -42,8 +42,8 @@ function App() {
     refresh();
   };
 
-  const handleCapture = (cardId: string, attackType: any, cardIdsToPlay: string[]) => {
-    gameEngine.declareCapture(cardId, attackType, cardIdsToPlay);
+  const handleCapture = (cardId: string, attackType: any, cardIdsToPlay: string[], consumablesToUse?: string[]) => {
+    gameEngine.declareCapture(cardId, attackType, cardIdsToPlay, consumablesToUse);
     refresh();
   };
 

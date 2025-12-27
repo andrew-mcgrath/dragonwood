@@ -7,7 +7,7 @@ vi.mock('./Dice', async (importOriginal) => {
     const mod = await importOriginal<typeof import('./Dice')>();
     return {
         ...mod,
-        rollDice: (count: number) => Array(count).fill(1).map(n => 1),
+        rollDice: (count: number) => Array(count).fill(1).map(_ => 1),
         calculateTotal: (rolls: number[]) => rolls.reduce((a, b) => a + b, 0)
     };
 });
