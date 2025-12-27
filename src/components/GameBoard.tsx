@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { GameState, AttackType } from '../engine/types';
 import { CardComponent } from './Card';
 import { Probability } from '../engine/Probability';
+import { audioManager } from '../engine/AudioManager';
 import '../index.css';
 
 
@@ -53,11 +54,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
     // Show dice toast when rolling or when results come in
     useEffect(() => {
-        if (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0) {
+        if (gameState.diceRollConfig.pending) {
             setShowToast(true);
             setGenericToast(prev => ({ ...prev, visible: false }));
+            audioManager.playRollStart();
+        } else if (gameState.diceRollConfig.results.length > 0) {
+            // Results arrived
+            setShowToast(true);
+            setGenericToast(prev => ({ ...prev, visible: false }));
+
+            if (gameState.diceRollConfig.success === true) {
+                audioManager.playSuccess();
+            } else if (gameState.diceRollConfig.success === false) {
+                audioManager.playFailure();
+            }
         }
-    }, [gameState.diceRollConfig.pending, gameState.diceRollConfig.results]);
+    }, [gameState.diceRollConfig.pending, gameState.diceRollConfig.results, gameState.diceRollConfig.success]);
 
     // Handle Engine Notifications (Bot & Player Actions)
     useEffect(() => {
@@ -67,8 +79,32 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                 visible: true,
                 type: gameState.latestNotification.type
             });
+            // Play a small notification sound or reuse draw sound for general updates if desired
+            // audioManager.playDraw(); 
         }
     }, [gameState.latestNotification?.id]); // Only trigger on ID change
+
+    // Handle Game Over Sound
+    useEffect(() => {
+        if (gameState.phase === 'game_over') {
+            // Determine win/loss
+            const player = gameState.players.find(p => !p.isBot);
+            if (player) {
+                // Simplified check: Are we the winner? 
+                // We'll let the existing logic inside the render block calculate scores perfectly, 
+                // but here we just need a quick check or we can delay sound until render?
+                // Better: Check turn log or just simple score compare here for audio trigger
+                // Or just play a general "Game Over" fanfare.
+                // Let's reuse the score calculation logic or just play "Win" if not bot.
+                // For MVP audio, let's just assume if it's game over, play a fanfare.
+                // Refinment: calculate scores here briefly.
+                const scores = gameState.players.map(p => ({ id: p.id, score: p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0) }));
+                const myScore = scores.find(s => s.id === player.id)?.score || 0;
+                const botScore = scores.find(s => s.id !== player.id)?.score || 0;
+                audioManager.playGameOver(myScore >= botScore);
+            }
+        }
+    }, [gameState.phase]);
 
     // Scroll to bottom when log is expanded OR when new logs arrive while expanded
     useEffect(() => {
@@ -160,6 +196,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     };
 
     const handleDraw = () => {
+        audioManager.playDraw();
         onDraw();
     };
 
