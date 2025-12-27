@@ -695,6 +695,22 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                 );
                             })()}
 
+                            {/* Adventure Log in Game Over */}
+                            <div style={{
+                                width: '100%', textAlign: 'left', marginBottom: '20px',
+                                background: 'rgba(0,0,0,0.05)', padding: '15px', borderRadius: '10px',
+                                maxHeight: '200px', overflowY: 'auto', border: '1px solid rgba(0,0,0,0.1)'
+                            }}>
+                                <h3 style={{ margin: '0 0 10px 0', color: '#7f8c8d', fontSize: '1em' }}>📜 Complete Adventure Log</h3>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    {gameState.turnLog.map((log, i) => (
+                                        <div key={i} style={{ fontSize: '0.9em', color: '#34495e', marginBottom: '4px', borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: '2px' }}>
+                                            {log}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
                             <button
                                 onClick={() => window.location.reload()}
                                 style={{
