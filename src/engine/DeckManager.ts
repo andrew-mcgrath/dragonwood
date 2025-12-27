@@ -49,16 +49,24 @@ export function createAdventurerDeck(): PlayerCard[] {
 
 // const ENHANCEMENTS_DATA: Omit<Enhancement, 'id' | 'type'>[] = [];
 
-const CREATURES_DATA: Omit<Creature, 'id' | 'type'>[] = [
-    { name: 'Fire Ant', victoryPoints: 2, captureCost: { strike: 3, stomp: 4, scream: 5 }, image: 'fire_ant' },
-    { name: 'Gooey Glob', victoryPoints: 3, captureCost: { strike: 4, stomp: 5, scream: 6 }, image: 'gooey_glob' },
-    { name: 'Angry Ogre', victoryPoints: 4, captureCost: { strike: 5, stomp: 6, scream: 7 }, image: 'angry_ogre' },
-    { name: 'Spooky Spiders', victoryPoints: 1, captureCost: { strike: 3, stomp: 3, scream: 3 }, image: 'spooky_spiders' },
-    { name: 'Hungry Bear', victoryPoints: 3, captureCost: { strike: 5, stomp: 4, scream: 6 }, image: 'hungry_bear' },
-    { name: 'Gigantic Giant', victoryPoints: 5, captureCost: { strike: 6, stomp: 7, scream: 8 }, image: 'gigantic_giant' },
-    { name: 'Dragon', victoryPoints: 7, captureCost: { strike: 9, stomp: 9, scream: 9 }, image: 'dragon' },
-    { name: 'Troll', victoryPoints: 4, captureCost: { strike: 6, stomp: 5, scream: 5 }, image: 'troll' },
-    { name: 'Goblin', victoryPoints: 2, captureCost: { strike: 4, stomp: 4, scream: 4 }, image: 'goblin' },
+// Deck composition: creature definitions with quantities
+const CREATURES_DATA: Array<{ quantity: number } & Omit<Creature, 'id' | 'type'>> = [
+    { quantity: 2, name: 'Wild Boar', victoryPoints: 3, captureCost: { strike: 8, stomp: 7, scream: 7 }, image: 'wild_boar' },
+    { quantity: 2, name: 'Fire Ants', victoryPoints: 2, captureCost: { strike: 7, stomp: 4, scream: 6 }, image: 'fire_ant' },
+    { quantity: 2, name: 'Giggle Goblin', victoryPoints: 2, captureCost: { strike: 7, stomp: 5, scream: 5 }, image: 'goblin' },
+    { quantity: 1, name: 'Angry Ogre', victoryPoints: 5, captureCost: { strike: 12, stomp: 9, scream: 14 }, image: 'angry_ogre' },
+    { quantity: 1, name: 'Orange Dragon', victoryPoints: 7, captureCost: { strike: 15, stomp: 11, scream: 12 }, image: 'orange_dragon' },
+    { quantity: 1, name: 'Blue Dragon', victoryPoints: 6, captureCost: { strike: 99, stomp: 10, scream: 13 }, image: 'blue_dragon' },
+    { quantity: 2, name: 'Pack of Wolves', victoryPoints: 3, captureCost: { strike: 6, stomp: 7, scream: 9 }, image: 'pack_of_wolves' },
+    { quantity: 2, name: 'Fierce Jaguar', victoryPoints: 3, captureCost: { strike: 8, stomp: 6, scream: 8 }, image: 'fierce_jaguar' },
+    { quantity: 4, name: 'Spooky Spiders', victoryPoints: 1, captureCost: { strike: 3, stomp: 3, scream: 3 }, image: 'spooky_spiders' },
+    { quantity: 2, name: 'Hungry Bear', victoryPoints: 3, captureCost: { strike: 7, stomp: 6, scream: 9 }, image: 'hungry_bear' },
+    { quantity: 1, name: 'Gooey Glob', victoryPoints: 5, captureCost: { strike: 14, stomp: 9, scream: 10 }, image: 'gooey_glob' },
+    { quantity: 4, name: 'Crazy Bats', victoryPoints: 1, captureCost: { strike: 4, stomp: 3, scream: 3 }, image: 'crazy_bats' },
+    { quantity: 2, name: 'Wasps\' Nest', victoryPoints: 2, captureCost: { strike: 5, stomp: 6, scream: 7 }, image: 'wasps_nest' },
+    { quantity: 1, name: 'Grumpy Troll', victoryPoints: 4, captureCost: { strike: 9, stomp: 11, scream: 9 }, image: 'grumpy_troll' },
+    { quantity: 1, name: 'Secret Shadow', victoryPoints: 4, captureCost: { strike: 10, stomp: 8, scream: 11 }, image: 'secret_shadow' },
+    { quantity: 1, name: 'Gigantic Python', victoryPoints: 4, captureCost: { strike: 11, stomp: 8, scream: 10 }, image: 'gigantic_python' },
 ];
 
 const ENHANCEMENTS_DATA: Omit<Enhancement, 'id' | 'type'>[] = [
@@ -72,17 +80,23 @@ export function createDragonwoodDeck(): DragonwoodCard[] {
     const deck: DragonwoodCard[] = [];
     const dragonCards: DragonwoodCard[] = [];
 
-    // Add multiple copies of some creatures to fill out the deck
-    CREATURES_DATA.forEach((c, idx) => {
-        const card1 = { ...c, id: `creature_${idx}`, type: 'creature' } as DragonwoodCard;
-        const card2 = { ...c, id: `creature_${idx}_2`, type: 'creature' } as DragonwoodCard;
+    // Add creatures based on their specified quantities
+    let creatureIdCounter = 0;
+    CREATURES_DATA.forEach((creatureData) => {
+        for (let i = 0; i < creatureData.quantity; i++) {
+            const { quantity, ...creatureProps } = creatureData;
+            const card: DragonwoodCard = {
+                ...creatureProps,
+                id: `creature_${creatureIdCounter++}`,
+                type: 'creature'
+            };
 
-        if (c.name === 'Dragon') {
-            dragonCards.push(card1);
-            dragonCards.push(card2);
-        } else {
-            deck.push(card1);
-            deck.push(card2);
+            // Separate dragon cards to ensure they appear in bottom half
+            if (creatureData.name === 'Orange Dragon' || creatureData.name === 'Blue Dragon') {
+                dragonCards.push(card);
+            } else {
+                deck.push(card);
+            }
         }
     });
 
@@ -94,15 +108,16 @@ export function createDragonwoodDeck(): DragonwoodCard[] {
     const shuffledNonDragons = shuffle(deck);
 
     // 2. Calculate the safe zone (top half) based on total cards
-    const totalCards = deck.length + dragonCards.length;
-    const halfIndex = Math.floor(totalCards / 2);
+    // The top half (end of array, drawn first) should get the LARGER portion for odd-length decks
+    // This ensures dragons stay in the bottom half (start of array, drawn last)
+    const totalCards = shuffledNonDragons.length + dragonCards.length;
+    const topHalfSize = Math.ceil(totalCards / 2); // Larger half (for odd totals)
 
     // Ensure we have enough non-dragon cards for the top half
-    // (In a normal game this is always true, but good to be safe)
-    const splitIndex = Math.min(halfIndex, shuffledNonDragons.length);
+    const splitIndex = Math.max(0, shuffledNonDragons.length - topHalfSize);
 
-    const topHalf = shuffledNonDragons.slice(0, splitIndex);
-    const bottomNonDragons = shuffledNonDragons.slice(splitIndex);
+    const bottomNonDragons = shuffledNonDragons.slice(0, splitIndex);
+    const topHalf = shuffledNonDragons.slice(splitIndex);
 
     // 3. Add dragons to bottom half and shuffle ONLY the bottom half
     // NOTE: Game uses .pop() to draw, so the 'end' of the array is the 'top' of the deck.
