@@ -16,7 +16,7 @@ export interface LuckyLadybugCard {
 
 export type PlayerCard = AdventurerCard | LuckyLadybugCard;
 
-export type AttackType = 'strike' | 'stomp' | 'scream';
+export type AttackType = 'strike' | 'stomp' | 'scream' | 'dragon_spell';
 
 export interface Creature {
   id: string;

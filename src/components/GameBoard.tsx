@@ -303,6 +303,20 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                     }}>
                                         ⚔️
                                     </button>
+
+                                    {/* Dragon Spell Button: Only valid if target is Dragon and 3 cards selected */}
+                                    {isMyTurn && selectedLandscapeCard?.name === 'Dragon' && selectedHandCards.length === 3 && (
+                                        <div style={{ position: 'absolute', top: -75, left: 10 }}>
+                                            <button onClick={() => handleAction('dragon_spell')} title="Dragon Spell! (Rules: 3-card Straight Flush)" style={{
+                                                fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'linear-gradient(135deg, #9b59b6, #8e44ad)', color: 'white', border: '2px solid #8e44ad', cursor: 'pointer', boxShadow: '0 0 15px #9b59b6',
+                                                animation: 'pulse 2s infinite'
+                                            }}>
+                                                🪄
+                                            </button>
+                                            <div style={{ color: '#9b59b6', fontSize: '0.8em', fontWeight: 'bold', textShadow: '0 0 2px black', textAlign: 'center' }}>Dragon Spell</div>
+                                        </div>
+                                    )}
                                     {isMyTurn && selectedLandscapeCard && selectedHandCards.length > 0 && (selectedLandscapeCard.type === 'creature' || selectedLandscapeCard.type === 'enhancement') && (
                                         <div style={{
                                             position: 'absolute', top: -10, right: -10,

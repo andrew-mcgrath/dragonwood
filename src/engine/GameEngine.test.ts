@@ -84,4 +84,68 @@ describe('GameEngine', () => {
             engine.declareCapture(targetCreature.id, 'scream', ['1', '2', '3', '4', '5', '6', '7']);
         }).toThrow("Max 6 cards allowed");
     });
+    it('should allow Dragon Spell capture on Dragon with valid cards', () => {
+        const engine = new GameEngine();
+        const player = engine.state.players[0];
+
+        // 1. Mock Landscape with Dragon
+        engine.state.landscape = [{
+            id: 'dragon_1', name: 'Dragon', type: 'creature', victoryPoints: 7,
+            captureCost: { strike: 9, stomp: 9, scream: 9 }
+        } as any];
+
+        // 2. Mock Hand (3-card Straight Flush)
+        player.hand = [
+            { id: 'c1', type: 'adventurer', suit: 'red', value: 3 },
+            { id: 'c2', type: 'adventurer', suit: 'red', value: 4 },
+            { id: 'c3', type: 'adventurer', suit: 'red', value: 5 },
+        ] as any;
+
+        // 3. Execute Capture
+        engine.declareCapture('dragon_1', 'dragon_spell', ['c1', 'c2', 'c3']);
+
+        // 4. Assert Success (Instant Win)
+        expect(engine.state.diceRollConfig.success).toBe(true);
+        expect(player.capturedCards.length).toBe(1);
+        expect(player.capturedCards[0].name).toBe('Dragon');
+    });
+
+    it('should fail Dragon Spell if target is not Dragon', () => {
+        const engine = new GameEngine();
+        const player = engine.state.players[0];
+
+        // Mock Landscape with NOT Dragon
+        engine.state.landscape = [{
+            id: 'troll_1', name: 'Troll', type: 'creature', victoryPoints: 4,
+            captureCost: { strike: 6, stomp: 5, scream: 5 }
+        } as any];
+
+        player.hand = [
+            { id: 'c1', type: 'adventurer', suit: 'red', value: 3 },
+            { id: 'c2', type: 'adventurer', suit: 'red', value: 4 },
+            { id: 'c3', type: 'adventurer', suit: 'red', value: 5 },
+        ] as any;
+
+        expect(() => {
+            engine.declareCapture('troll_1', 'dragon_spell', ['c1', 'c2', 'c3']);
+        }).toThrow("Dragon Spell can only be used on a Dragon!");
+    });
+
+    it('should fail Dragon Spell if cards are not a 3-card Straight Flush', () => {
+        const engine = new GameEngine();
+        const player = engine.state.players[0];
+
+        engine.state.landscape = [{ id: 'd1', name: 'Dragon', type: 'creature' } as any];
+
+        // Invalid: Flush but not Straight
+        player.hand = [
+            { id: 'c1', type: 'adventurer', suit: 'red', value: 3 },
+            { id: 'c2', type: 'adventurer', suit: 'red', value: 5 },
+            { id: 'c3', type: 'adventurer', suit: 'red', value: 7 },
+        ] as any;
+
+        expect(() => {
+            engine.declareCapture('d1', 'dragon_spell', ['c1', 'c2', 'c3']);
+        }).toThrow("Dragon Spell requires a generic 3-card Straight Flush!");
+    });
 });
