@@ -179,7 +179,7 @@ export class GameEngine {
     }
 
     // Attempt to capture mechanism
-    public declareCapture(cardId: string, attackType: AttackType, cardIdsToPlay: string[]) {
+    public declareCapture(cardId: string, attackType: AttackType, cardIdsToPlay: string[], consumablesToUse: string[] = []) {
         if (this.state.phase !== 'action') return;
 
         const player = this.state.players[this.state.currentPlayerIndex];
@@ -197,6 +197,17 @@ export class GameEngine {
 
         if (cardsToPlay.length > 6) {
             throw new Error("Max 6 cards allowed");
+        }
+
+        // Validate Consumables
+        const consumables: import('./types').DragonwoodCard[] = [];
+        for (const cId of consumablesToUse) {
+            const card = player.capturedCards.find(c => c.id === cId);
+            if (!card) throw new Error(`Consumable card ${cId} not found in captured cards`);
+            if (card.name !== 'Lightning Bolt' && card.name !== 'Friendly Bunny') {
+                throw new Error("Only Lightning Bolt and Friendly Bunny can be used as consumables");
+            }
+            consumables.push(card);
         }
 
         // Remove Lucky Ladybugs from selection logic if selected (shouldn't be select-able for attack usually, but handle it)
@@ -256,14 +267,28 @@ export class GameEngine {
             throw new Error(`Invalid card combination for ${attackType}`);
         }
 
+        // Apply Consumable Effects
+        let consumableBonusValue = 0;
+        let extraDice = 0;
+
+        consumables.forEach(c => {
+            if (c.name === 'Lightning Bolt') consumableBonusValue += 4;
+            if (c.name === 'Friendly Bunny') extraDice += 1;
+        });
+
+        // Use Consumables (Remove them immediately)
+        if (consumables.length > 0) {
+            player.capturedCards = player.capturedCards.filter(c => !consumablesToUse.includes(c.id));
+            this.state.turnLog.push(`${player.name} uses ${consumables.map(c => c.name).join(' & ')}!`);
+        }
+
         // Dice calculation
         // 1 card = 1 die base.
-        // Check for enhancements (TODO)
-        let diceCount = adventurerCards.length; // + enhancements
+        let diceCount = adventurerCards.length + extraDice;
 
         // Dragon Spell: Roll 2 dice (user rule)
         if (attackType === 'dragon_spell') {
-            diceCount = 2;
+            diceCount = 2 + extraDice;
         }
 
         // Update state to rolling
@@ -300,9 +325,29 @@ export class GameEngine {
             bonusValue = this.calculateUniversalBonus(player);
         }
 
+        // Add consumable bonuses
+        bonusValue += consumableBonusValue;
+
         // Enhancement bonuses cannot be used to capture other enhancements
         if (targetCard.type === 'enhancement') {
-            bonusValue = 0;
+            bonusValue = 0; // Does this nullify consumable bonuses too?
+            // User request: "Lightning Bolt... add 4 points to any capture attempt"
+            // "Friendly Bunny... roll 1 extra die in a capture attempt"
+            // Enhancement capture rules usually restrict permanent enhancements from helping capture other enhancements.
+            // But consumables are one-time use. It's safer to allow them unless specified otherwise.
+            // However, the line `bonusValue = 0;` here wipes out everything.
+            // I should preserve consumable bonuses if they apply.
+            // Let's assume Consumables work on enhancements too as they are "spent".
+            // So I should separate permanent bonuses from consumable bonuses.
+            // Re-calculating to be safe:
+            if (targetCard.type === 'enhancement') {
+                // Reset permanent bonuses, but keep consumable bonuses?
+                // Current logic wipes everything.
+                // Let's assume for now strictly interpreting "bonusValue = 0" applies to everything,
+                // BUT "Lightning Bolt" says "add 4 points to ANY capture attempt".
+                // I'll modify logic to allow consumable bonuses even for enhancements.
+                bonusValue = consumableBonusValue;
+            }
         }
 
         // Execute Roll immediately for simplicity
