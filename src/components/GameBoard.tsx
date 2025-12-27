@@ -42,6 +42,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     const [selectedHandCards, setSelectedHandCards] = useState<string[]>([]);
     const [selectedLandscapeCardId, setSelectedLandscapeCardId] = useState<string | null>(null);
     const [isLogCollapsed, setIsLogCollapsed] = useState(true);
+    const [isGameOverLogExpanded, setIsGameOverLogExpanded] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [genericToast, setGenericToast] = useState<{ message: string, visible: boolean, type: 'info' | 'error' | 'success' }>({ message: '', visible: false, type: 'info' });
     const selectedLandscapeCard = gameState.landscape.find(c => c.id === selectedLandscapeCardId);
@@ -698,16 +699,35 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             {/* Adventure Log in Game Over */}
                             <div style={{
                                 width: '100%', textAlign: 'left', marginBottom: '20px',
-                                background: 'rgba(0,0,0,0.05)', padding: '15px', borderRadius: '10px',
-                                maxHeight: '200px', overflowY: 'auto', border: '1px solid rgba(0,0,0,0.1)'
+                                background: 'rgba(0,0,0,0.05)', borderRadius: '10px',
+                                overflow: 'hidden', border: '1px solid rgba(0,0,0,0.1)'
                             }}>
-                                <h3 style={{ margin: '0 0 10px 0', color: '#7f8c8d', fontSize: '1em' }}>📜 Complete Adventure Log</h3>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    {gameState.turnLog.map((log, i) => (
-                                        <div key={i} style={{ fontSize: '0.9em', color: '#34495e', marginBottom: '4px', borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: '2px' }}>
-                                            {log}
-                                        </div>
-                                    ))}
+                                <div
+                                    onClick={() => setIsGameOverLogExpanded(!isGameOverLogExpanded)}
+                                    style={{
+                                        padding: '10px 15px',
+                                        cursor: 'pointer',
+                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                        background: 'rgba(0,0,0,0.05)',
+                                        borderBottom: '1px solid rgba(0,0,0,0.05)'
+                                    }}
+                                >
+                                    <h3 style={{ margin: 0, color: '#7f8c8d', fontSize: '1em' }}>📜 Complete Adventure Log</h3>
+                                    <span style={{ fontSize: '0.9em', color: '#7f8c8d' }}>{isGameOverLogExpanded ? 'Collapse ▲' : 'Expand ▼'}</span>
+                                </div>
+                                <div style={{
+                                    padding: '15px',
+                                    maxHeight: isGameOverLogExpanded ? '50vh' : '150px',
+                                    overflowY: 'auto',
+                                    transition: 'max-height 0.3s ease-out'
+                                }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        {gameState.turnLog.map((log, i) => (
+                                            <div key={i} style={{ fontSize: '0.9em', color: '#34495e', marginBottom: '4px', borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: '2px' }}>
+                                                {log}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
 
