@@ -589,23 +589,31 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                                                 }).map((card, idx) => {
                                                                     const vp = 'victoryPoints' in card ? (card as any).victoryPoints : 0;
                                                                     const isEnhancement = card.type === 'enhancement';
+                                                                    const imagePath = (card as any).image ? `/images/${(card as any).image}.png` : null;
+
                                                                     return (
                                                                         <div key={idx} style={{
                                                                             display: 'flex', flexDirection: 'column', alignItems: 'center',
                                                                             width: '70px', height: '90px',
-                                                                            background: isEnhancement ? '#d5f5e3' : '#fadbd8',
+                                                                            background: imagePath ? `url(${imagePath})` : (isEnhancement ? '#d5f5e3' : '#fadbd8'),
+                                                                            backgroundSize: 'cover',
+                                                                            backgroundPosition: 'center',
                                                                             border: isEnhancement ? '1px solid #2ecc71' : '1px solid #e74c3c',
                                                                             borderRadius: '6px', padding: '4px',
                                                                             justifyContent: 'space-between',
-                                                                            textAlign: 'center', position: 'relative'
+                                                                            textAlign: 'center', position: 'relative',
+                                                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                                                                         }} title={card.name}>
-                                                                            <div style={{ fontSize: '0.6em', lineHeight: '1.1em', fontWeight: 'bold', overflow: 'hidden', color: '#2c3e50' }}>
+                                                                            {/* Semi-transparent overlay for readability if image exists */}
+                                                                            {imagePath && <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.6)', borderRadius: '5px' }} />}
+
+                                                                            <div style={{ position: 'relative', fontSize: '0.6em', lineHeight: '1.1em', fontWeight: 'bold', overflow: 'hidden', color: '#2c3e50', textShadow: '0 0 2px white' }}>
                                                                                 {card.name}
                                                                             </div>
-                                                                            <div style={{ fontSize: '1.2em', fontWeight: 'bold', color: isEnhancement ? '#27ae60' : '#c0392b' }}>
+                                                                            <div style={{ position: 'relative', fontSize: '1.2em', fontWeight: 'bold', color: isEnhancement ? '#27ae60' : '#c0392b', textShadow: '0 0 2px white' }}>
                                                                                 {vp > 0 ? vp : '-'}
                                                                             </div>
-                                                                            <div style={{ fontSize: '0.5em', opacity: 0.7 }}>
+                                                                            <div style={{ position: 'relative', fontSize: '0.5em', opacity: 0.9, fontWeight: 'bold', color: '#2c3e50', textShadow: '0 0 2px white' }}>
                                                                                 {isEnhancement ? 'ITEM' : 'FOE'}
                                                                             </div>
                                                                         </div>
