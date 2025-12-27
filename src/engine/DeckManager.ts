@@ -56,7 +56,7 @@ const CREATURES_DATA: Array<{ quantity: number } & Omit<Creature, 'id' | 'type'>
     { quantity: 2, name: 'Giggle Goblin', victoryPoints: 2, captureCost: { strike: 7, stomp: 5, scream: 5 }, image: 'goblin' },
     { quantity: 1, name: 'Angry Ogre', victoryPoints: 5, captureCost: { strike: 12, stomp: 9, scream: 14 }, image: 'angry_ogre' },
     { quantity: 1, name: 'Orange Dragon', victoryPoints: 7, captureCost: { strike: 15, stomp: 11, scream: 12 }, image: 'orange_dragon' },
-    { quantity: 1, name: 'Blue Dragon', victoryPoints: 6, captureCost: { strike: 99, stomp: 10, scream: 13 }, image: 'blue_dragon' },
+    { quantity: 1, name: 'Blue Dragon', victoryPoints: 6, captureCost: { strike: 13, stomp: 10, scream: 13 }, image: 'blue_dragon' },
     { quantity: 2, name: 'Pack of Wolves', victoryPoints: 3, captureCost: { strike: 6, stomp: 7, scream: 9 }, image: 'pack_of_wolves' },
     { quantity: 2, name: 'Fierce Jaguar', victoryPoints: 3, captureCost: { strike: 8, stomp: 6, scream: 8 }, image: 'fierce_jaguar' },
     { quantity: 4, name: 'Spooky Spiders', victoryPoints: 1, captureCost: { strike: 3, stomp: 3, scream: 3 }, image: 'spooky_spiders' },
@@ -70,10 +70,12 @@ const CREATURES_DATA: Array<{ quantity: number } & Omit<Creature, 'id' | 'type'>
 ];
 
 const ENHANCEMENTS_DATA: Omit<Enhancement, 'id' | 'type'>[] = [
-    { name: 'Silver Sword', effectDescription: 'Add +2 to all Strikes', victoryPoints: 0, captureCost: { strike: 5, stomp: 99, scream: 99 }, image: 'silver_sword' }, // Approximate
-    { name: 'Cloak of Darkness', effectDescription: 'Add +2 to all Screams', victoryPoints: 0, captureCost: { strike: 99, stomp: 99, scream: 5 }, image: 'cloak_of_darkness' },
-    { name: 'Magical Boots', effectDescription: 'Add +2 to all Stomps', victoryPoints: 0, captureCost: { strike: 99, stomp: 5, scream: 99 }, image: 'magical_boots' },
-    { name: 'Honey Pot', effectDescription: 'Re-roll any 1', victoryPoints: 0, captureCost: { strike: 4, stomp: 4, scream: 4 }, image: 'honey_pot' },
+    { name: 'Silver Sword', effectDescription: 'Add +2 to all Strikes', victoryPoints: 0, captureCost: { strike: 10, stomp: 6, scream: 7 }, image: 'silver_sword' }, // Approximate
+    { name: 'Ghost Disguise', effectDescription: 'Add +2 to all Screams', victoryPoints: 0, captureCost: { strike: 8, stomp: 7, scream: 10 }, image: 'ghost_disguise' },
+    { name: 'Magical Boots', effectDescription: 'Add +2 to all Stomps', victoryPoints: 0, captureCost: { strike: 7, stomp: 10, scream: 8 }, image: 'magical_boots' },
+    { name: 'Honey Pot', effectDescription: 'Re-roll any 1', victoryPoints: 0, captureCost: { strike: 7, stomp: 5, scream: 7 }, image: 'honey_pot' },
+    { name: 'Cloak of Darkness', effectDescription: 'Add +2 to all capture attempts', victoryPoints: 0, captureCost: { strike: 11, stomp: 9, scream: 11 }, image: 'cloak_of_darkness' },
+    { name: 'Magical Unicorn', effectDescription: 'Add +1 to all capture attempts', victoryPoints: 0, captureCost: { strike: 8, stomp: 6, scream: 8 }, image: 'magical_unicorn' },
 ];
 
 export function createDragonwoodDeck(): DragonwoodCard[] {
