@@ -186,7 +186,7 @@ describe('GameEngine', () => {
 
     it('should require 2 discards on Dragon Spell failure', () => {
         const engine = new GameEngine();
-        const player = engine.state.players[0];
+
 
         // Mock Dragon Landscape
         engine.state.landscape = [{
@@ -331,4 +331,29 @@ describe('GameEngine', () => {
         expect(engine2.state.phase).toBe('game_over');
         expect(engine2.state.turnLog.some(l => l.includes('Both Dragons have been defeated!'))).toBe(true);
     });
+
+    it('should apply Magical Unicorn bonus (+1) to Dragon Spell', () => {
+        const engine = new GameEngine();
+        const player = engine.state.players[0];
+
+        // Give player a "Magical Unicorn"
+        player.capturedCards.push({
+            id: 'u1', name: 'Magical Unicorn', type: 'enhancement',
+            victoryPoints: 0, captureCost: {}, effectDescription: '+1 to all'
+        } as any);
+
+        // Calculate universal bonus
+        const bonus = engine.calculateUniversalBonus(player);
+        expect(bonus).toBe(1);
+
+        // Verify it stacks with Cloak of Darkness
+        player.capturedCards.push({
+            id: 'c1', name: 'Cloak of Darkness', type: 'enhancement',
+            victoryPoints: 0, captureCost: {}, effectDescription: '+2 to all'
+        } as any);
+
+        const stackedBonus = engine.calculateUniversalBonus(player);
+        expect(stackedBonus).toBe(3); // 1 + 2
+    });
 });
+
