@@ -109,8 +109,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
             return;
         }
         if (selectedHandCards.length === 1) {
-            onPenaltyDiscard(selectedHandCards[0]);
-            setSelectedHandCards([]);
+            try {
+                onPenaltyDiscard(selectedHandCards[0]);
+                setSelectedHandCards([]);
+            } catch (err: any) {
+                setGenericToast({ message: `⚠️ ${err.message}`, visible: true, type: 'error' });
+            }
         }
     };
 

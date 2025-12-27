@@ -43,21 +43,13 @@ function App() {
   };
 
   const handleCapture = (cardId: string, attackType: any, cardIdsToPlay: string[]) => {
-    try {
-      gameEngine.declareCapture(cardId, attackType, cardIdsToPlay);
-      refresh();
-    } catch (e: any) {
-      alert(e.message);
-    }
+    gameEngine.declareCapture(cardId, attackType, cardIdsToPlay);
+    refresh();
   };
 
   const handlePenaltyDiscard = (cardId: string) => {
-    try {
-      gameEngine.resolvePenaltyDiscard(cardId);
-      refresh(); // Refresh after state change
-    } catch (e: any) {
-      alert(e.message);
-    }
+    gameEngine.resolvePenaltyDiscard(cardId);
+    refresh(); // Refresh after state change
   };
 
   const handleRenamePlayer = (playerId: string, newName: string) => {
