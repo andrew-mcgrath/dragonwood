@@ -395,7 +395,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
                                 <div style={{ position: 'relative' }}>
-                                    <button onClick={() => handleAction('dragon_spell')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Dragon Spell! (Rules: 3-card Straight Flush on Dragon)" style={{
+                                    <button onClick={() => handleAction('dragon_spell')} disabled={!isMyTurn || !selectedLandscapeCard || selectedHandCards.length === 0} title="Dragon Spell: Instant Capture! Requires a 3-card Straight Flush (Same Suit, Sequential Order) to capture a Dragon." style={{
                                         fontSize: '2em', padding: '0', borderRadius: '50%', width: '60px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         background: 'linear-gradient(135deg, rgba(41, 182, 246, 0.6), rgba(3, 169, 244, 0.6))', color: 'white', border: '2px solid #03a9f4', cursor: 'pointer', boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                                     }}>
