@@ -257,9 +257,9 @@ export class GameEngine {
         // Check for enhancements (TODO)
         let diceCount = adventurerCards.length; // + enhancements
 
-        // Dragon Spell: Roll dice for visual flair, even though success is guaranteed
+        // Dragon Spell: Roll 2 dice (user rule)
         if (attackType === 'dragon_spell') {
-            diceCount = adventurerCards.length;
+            diceCount = 2;
         }
 
         // Update state to rolling
@@ -275,7 +275,7 @@ export class GameEngine {
         // Determine Success
         let required = 0;
         if (attackType === 'dragon_spell') {
-            required = 0; // Instant success
+            required = 6; // User rule: Roll 2 dice, need 6+
         } else {
             // Check if property exists, otherwise default high
             const costMap = (targetCard as any).captureCost;
