@@ -502,7 +502,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             </>
                         )}
                     </h3>
-                    {!genericToast.visible && gameState.diceRollConfig.results.length > 0 && (
+                    {showToast && gameState.diceRollConfig.results.length > 0 && (
                         <>
                             <div style={{ display: 'flex', gap: '5px', marginBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}>
                                 {gameState.diceRollConfig.results.map((val, i) => (
@@ -517,7 +517,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             </div>
                         </>
                     )}
-                    {!genericToast.visible && gameState.diceRollConfig.required !== undefined && (
+                    {showToast && gameState.diceRollConfig.required !== undefined && (
                         <div style={{ fontSize: '0.9em', marginTop: '2px', opacity: 0.9 }}>
                             Needed: {gameState.diceRollConfig.required}
                         </div>
