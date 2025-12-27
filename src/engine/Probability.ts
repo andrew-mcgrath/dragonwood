@@ -4,6 +4,10 @@ export class Probability {
     // Cache for dice probabilities: [numDice][target] = probability
     private static cache: Map<string, number> = new Map();
 
+    static {
+        this.cache.clear();
+    }
+
     /**
      * Calculates the probability of rolling >= target with n dice.
      * Uses Standard Dragonwood dice via DICE_FACES.

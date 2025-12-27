@@ -308,7 +308,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                         <div style={{
                                             position: 'absolute', top: -10, right: -10,
                                             background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
-                                            border: '1px solid white'
+                                            border: '1px solid white', whiteSpace: 'nowrap'
                                         }}>
                                             {(() => {
                                                 const target = (selectedLandscapeCard as any).captureCost.strike;
@@ -343,7 +343,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                         <div style={{
                                             position: 'absolute', top: -10, right: -10,
                                             background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
-                                            border: '1px solid white'
+                                            border: '1px solid white', whiteSpace: 'nowrap'
                                         }}>
                                             {(() => {
                                                 const target = (selectedLandscapeCard as any).captureCost.stomp;
@@ -374,7 +374,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                         <div style={{
                                             position: 'absolute', top: -10, right: -10,
                                             background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
-                                            border: '1px solid white'
+                                            border: '1px solid white', whiteSpace: 'nowrap'
                                         }}>
                                             {(() => {
                                                 const target = (selectedLandscapeCard as any).captureCost.scream;
@@ -405,7 +405,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                         <div style={{
                                             position: 'absolute', top: -10, right: -10,
                                             background: '#34495e', color: 'white', fontSize: '0.7em', padding: '2px 6px', borderRadius: '10px',
-                                            border: '1px solid white'
+                                            border: '1px solid white', whiteSpace: 'nowrap'
                                         }}>
                                             {(() => {
                                                 // Re-validate strictly for visual feedback
