@@ -23,7 +23,7 @@ Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dic
     - *Silver Sword*: +2 to all Strikes ⚔️
     - *Magical Boots*: +2 to all Stomps 🦶
     - *Ghost Disguise*: +2 to all Screams 😱
-    - *Cloak of Darkness*: +2 to ALL capture attempts (including Dragon Spells) 🥷
+    - *Cloak of Darkness*: +2 to ALL capture attempts 🥷
     - *Magical Unicorn*: +1 to ALL capture attempts 🦄
     - *Honey Pot*: Re-roll any 1s 🍯
 - **Special Mechanics**:
