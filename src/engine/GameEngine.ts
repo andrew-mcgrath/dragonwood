@@ -107,6 +107,10 @@ export class GameEngine {
 
     public drawCard() {
         if (this.state.phase !== 'action') return;
+
+        // Clear any previous dice roll state
+        this.state.diceRollConfig = { count: 0, pending: false, results: [] };
+
         const player = this.state.players[this.state.currentPlayerIndex];
 
         // Use recursive helper to handle Ladybugs
@@ -291,6 +295,9 @@ export class GameEngine {
         if (attackType !== 'dragon_spell') {
             const bonuses = this.calculateBonuses(player);
             bonusValue = bonuses[attackType];
+        } else {
+            // For Dragon Spell, only apply universal bonuses (Cloak of Darkness)
+            bonusValue = this.calculateUniversalBonus(player);
         }
 
         // Enhancement bonuses cannot be used to capture other enhancements
@@ -473,10 +480,38 @@ export class GameEngine {
             if (card.type === 'enhancement') {
                 if (card.name === 'Silver Sword') bonuses.strike += 2;
                 if (card.name === 'Magical Boots') bonuses.stomp += 2;
-                if (card.name === 'Cloak of Darkness') bonuses.scream += 2;
+                if (card.name === 'Ghost Disguise') bonuses.scream += 2;
+                if (card.name === 'Cloak of Darkness') {
+                    // Universal bonus: adds +2 to all capture types
+                    bonuses.strike += 2;
+                    bonuses.stomp += 2;
+                    bonuses.scream += 2;
+                }
+                if (card.name === 'Magical Unicorn') {
+                    // Universal bonus: adds +1 to all capture types
+                    bonuses.strike += 1;
+                    bonuses.stomp += 1;
+                    bonuses.scream += 1;
+                }
             }
         }
         return bonuses;
+    }
+
+    public calculateUniversalBonus(player: Player): number {
+        // Returns universal bonuses that apply to all attack types, including Dragon Spell
+        let universalBonus = 0;
+        for (const card of player.capturedCards) {
+            if (card.type === 'enhancement') {
+                if (card.name === 'Cloak of Darkness') {
+                    universalBonus += 2;
+                }
+                if (card.name === 'Magical Unicorn') {
+                    universalBonus += 1;
+                }
+            }
+        }
+        return universalBonus;
     }
 
     private runBotTurn() {

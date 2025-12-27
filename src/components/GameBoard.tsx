@@ -172,10 +172,12 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             : "No cards captured";
 
                         // Calculate bonuses for display
+                        const hasCloakOfDarkness = p.capturedCards.some(c => c.name === 'Cloak of Darkness');
+                        const hasMagicalUnicorn = p.capturedCards.some(c => c.name === 'Magical Unicorn');
                         const bonuses = {
-                            strike: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0),
-                            stomp: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Boots' ? 2 : 0), 0),
-                            scream: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Cloak of Darkness' ? 2 : 0), 0),
+                            strike: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0),
+                            stomp: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Boots' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0),
+                            scream: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Ghost Disguise' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0),
                         };
                         const hasHoneyPot = p.capturedCards.some(c => c.name === 'Honey Pot');
 
@@ -315,7 +317,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                         }}>
                                             {(() => {
                                                 const target = (selectedLandscapeCard as any).captureCost.strike;
-                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0);
+                                                const hasCloakOfDarkness = gameState.players[0].capturedCards.some(c => c.name === 'Cloak of Darkness');
+                                                const hasMagicalUnicorn = gameState.players[0].capturedCards.some(c => c.name === 'Magical Unicorn');
+                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0);
 
                                                 // Validate Strike (Straight)
                                                 const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
@@ -350,7 +354,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                         }}>
                                             {(() => {
                                                 const target = (selectedLandscapeCard as any).captureCost.stomp;
-                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Boots' ? 2 : 0), 0);
+                                                const hasCloakOfDarkness = gameState.players[0].capturedCards.some(c => c.name === 'Cloak of Darkness');
+                                                const hasMagicalUnicorn = gameState.players[0].capturedCards.some(c => c.name === 'Magical Unicorn');
+                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Boots' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0);
 
                                                 // Validate Stomp (Flush)
                                                 const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
@@ -381,7 +387,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                         }}>
                                             {(() => {
                                                 const target = (selectedLandscapeCard as any).captureCost.scream;
-                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Cloak of Darkness' ? 2 : 0), 0); // Correct bonus check?
+                                                const hasCloakOfDarkness = gameState.players[0].capturedCards.some(c => c.name === 'Cloak of Darkness');
+                                                const hasMagicalUnicorn = gameState.players[0].capturedCards.some(c => c.name === 'Magical Unicorn');
+                                                const bonus = gameState.players[0].capturedCards.reduce((acc, c) => acc + (c.name === 'Ghost Disguise' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0);
 
                                                 // Validate Scream (Kind)
                                                 const cards = gameState.players[0].hand.filter(c => selectedHandCards.includes(c.id)) as unknown as import('../engine/types').AdventurerCard[];
