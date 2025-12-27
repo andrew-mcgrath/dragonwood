@@ -530,9 +530,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                         alignItems: 'center', justifyContent: 'center', zIndex: 1000
                     }}>
                         <div style={{
-                            background: '#ecf0f1', padding: '40px', borderRadius: '20px',
+                            background: '#ecf0f1', padding: '30px', borderRadius: '20px',
                             textAlign: 'center', boxShadow: '0 0 30px rgba(230, 126, 34, 0.6)',
-                            maxWidth: '500px', width: '90%'
+                            maxWidth: '900px', width: '90%',
+                            maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column'
                         }}>
                             {(() => {
                                 const allPlayers = gameState.players.map(p => ({
@@ -555,9 +556,11 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                             </p>
                                         )}
 
-                                        <div style={{ marginBottom: '30px', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        <div style={{ marginBottom: '30px', textAlign: 'left', display: 'flex', flexDirection: 'row', gap: '20px', alignItems: 'stretch' }}>
                                             {allPlayers.map((p, i) => (
                                                 <div key={p.id} style={{
+                                                    flex: 1,
+                                                    display: 'flex', flexDirection: 'column',
                                                     background: i === 0 ? '#f1c40f' : 'white',
                                                     borderRadius: '12px',
                                                     border: i === 0 ? '3px solid #f39c12' : '1px solid #bdc3c7',
