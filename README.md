@@ -48,7 +48,7 @@ Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dic
 
 ### Prerequisites
 
-- Node.js (Latest LTS recommended)
+- [Node.js](https://nodejs.org/) (Built with `v24.12.0`)
 - npm
 
 ### Installation
