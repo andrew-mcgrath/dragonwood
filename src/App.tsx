@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { GameEngine } from './engine/GameEngine';
 import { GameBoard } from './components/GameBoard';
 import { SplashScreen } from './components/SplashScreen';
+import { VersionDisplay } from './components/VersionDisplay';
 import './index.css';
 
 // Singleton instance for simplicity in this MVP
@@ -65,7 +66,12 @@ function App() {
   }
 
   if (!gameStarted) {
-    return <SplashScreen onStartGame={handleStartGame} />;
+    return (
+      <>
+        <SplashScreen onStartGame={handleStartGame} />
+        <VersionDisplay />
+      </>
+    );
   }
 
   return (
@@ -77,6 +83,7 @@ function App() {
         onPenaltyDiscard={handlePenaltyDiscard}
         onRenamePlayer={handleRenamePlayer}
       />
+      <VersionDisplay />
     </div>
   );
 }
