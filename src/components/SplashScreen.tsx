@@ -22,14 +22,15 @@ export const SplashScreen: React.FC<SplashProps> = ({ onStartGame }) => {
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
             background: 'linear-gradient(135deg, #2c3e50 0%, #000000 100%)',
             color: '#ecf0f1', display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: '20px', zIndex: 999
+            alignItems: 'center', overflowY: 'auto', padding: '10px', zIndex: 999
         }}>
             <div style={{
-                background: 'rgba(255,255,255,0.1)', padding: '40px', borderRadius: '20px',
+                margin: 'auto',
+                background: 'rgba(255,255,255,0.1)', padding: '20px', borderRadius: '20px',
                 maxWidth: '800px', width: '100%', backdropFilter: 'blur(10px)',
                 boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)', border: '1px solid rgba(255, 255, 255, 0.18)'
             }}>
-                <h1 style={{ fontSize: '4em', margin: '0 0 20px 0', textAlign: 'center', color: '#f1c40f', textShadow: '2px 2px 4px #000000' }}>
+                <h1 style={{ fontSize: 'clamp(1.8rem, 6vw, 4rem)', margin: '0 0 20px 0', textAlign: 'center', color: '#f1c40f', textShadow: '2px 2px 4px #000000', lineHeight: 1.2 }}>
                     🐉 Dragonwood 🌲
                 </h1>
 
