@@ -11,6 +11,21 @@ Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dic
 ![Dragonwood Splash](docs/img/screenshots/splash.png)
 ![Dragonwood Gameplay](docs/img/screenshots/gameplay.png)
 
+## How to Play
+
+1.  **On your turn**, you can either:
+    - **Draw a Card**: Click "Draw Card" to add to your hand.
+    - **Capture**: Select a card in the **Landscape** (top row) and select cards from your **Hand** (bottom row) that form a valid attack (Strike, Stomp, Scream, or Dragon Spell). Then click the corresponding action button.
+2.  **Dice Roll**: The game calculates your dice count (1 per card + bonuses). If your total roll meets or exceeds the capture cost, you win the card!
+3.  **End of Game**: The game ends when:
+    -   Both Dragons present in the game are captured.
+    -   The Adventure Deck has been exhausted twice (each player gets 1 final turn).
+    -   The Dragonwood Deck is empty.
+
+## License
+
+This project is for educational/personal use. [Dragonwood](https://gamewright.com/product/Dragonwood) is a copyright of [Gamewright](https://gamewright.com/).
+
 ## Features implemented
 
 - **Core Gameplay Loop**: Draw cards, manage your hand, and capture landscape cards.
@@ -84,17 +99,24 @@ Explore the enchanted forest of Dragonwood! Collect adventurer cards to earn dic
     ```
 3.  Open browser at `http://localhost:8080`.
 
-## How to Play
+## Deployment
 
-1.  **On your turn**, you can either:
-    - **Draw a Card**: Click "Draw Card" to add to your hand.
-    - **Capture**: Select a card in the **Landscape** (top row) and select cards from your **Hand** (bottom row) that form a valid attack (Strike, Stomp, Scream, or Dragon Spell). Then click the corresponding action button.
-2.  **Dice Roll**: The game calculates your dice count (1 per card + bonuses). If your total roll meets or exceeds the capture cost, you win the card!
-3.  **End of Game**: The game ends when:
-    -   Both Dragons present in the game are captured.
-    -   The Adventure Deck has been exhausted twice (each player gets 1 final turn).
-    -   The Dragonwood Deck is empty.
+This project uses **Terraform** to manage AWS infrastructure and **npm scripts** for automated deployment.
 
-## License
+### Prerequisites for Deployment
+- [AWS CLI](https://aws.amazon.com/cli/) (configured with credentials)
+- [Terraform](https://www.terraform.io/)
 
-This project is for educational/personal use. [Dragonwood](https://gamewright.com/product/Dragonwood) is a copyright of [Gamewright](https://gamewright.com/).
+### Deploying to S3 and CloudFront
+To deploy the application to your AWS account:
+
+1.  Run the deploy command:
+    ```bash
+    npm run deploy
+    ```
+    This script will automatically:
+    - Build the application (`npm run build`).
+    - Initialize and apply Terraform scripts (`scripts/deploy.sh`) to provision/update the S3 bucket.
+    - Sync the build artifacts to the S3 bucket.
+
+The bucket name is dynamically generated based on your AWS account alias: `dragonwood-game-<your-alias>`.
