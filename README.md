@@ -107,7 +107,7 @@ This project uses **Terraform** to manage AWS infrastructure and **npm scripts**
 - [AWS CLI](https://aws.amazon.com/cli/) (configured with credentials)
 - [Terraform](https://www.terraform.io/)
 
-### Deploying to S3
+### Deploying to S3 and CloudFront
 To deploy the application to your AWS account:
 
 1.  Run the deploy command:
