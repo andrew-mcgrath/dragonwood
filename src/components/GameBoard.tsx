@@ -726,7 +726,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                 });
 
                                 const winner = allPlayers[0];
-                                const isWinner = winner.id === player.id; // Check if current player is top (Note: could be shared top if tie)
+                                const humanPlayer = gameState.players.find(p => !p.isBot);
+                                const isWinner = winner.id === humanPlayer?.id;
                                 // Strict Tie Check: Is the top player actually tied with the second?
                                 const isTie = allPlayers.length > 1 &&
                                     allPlayers[0].totalScore === allPlayers[1].totalScore &&
@@ -734,8 +735,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
                                 // Adjust Title for Tie
                                 let title = isWinner ? '🎉 Victory! 🏆' : '💀 Defeat...';
-                                if (isTie && allPlayers[0].id === player.id) title = '🤝 It\'s a Tie!';
-                                if (isTie && allPlayers[0].id !== player.id && allPlayers[1].id === player.id) title = '🤝 It\'s a Tie!'; // Player is one of the tiers
+                                if (isTie && allPlayers[0].id === humanPlayer?.id) title = '🤝 It\'s a Tie!';
+                                if (isTie && allPlayers[0].id !== humanPlayer?.id && allPlayers[1].id === humanPlayer?.id) title = '🤝 It\'s a Tie!'; // Player is one of the tiers
 
                                 return (
                                     <>
