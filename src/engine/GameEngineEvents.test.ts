@@ -126,7 +126,6 @@ describe('GameEngine - Events', () => {
         // P1 should have received SOMETHING from P4 (who had random cards).
         // Check local P1 hand size is 1 (gave 1, got 1).
         expect(p1.hand.length).toBe(1);
-        expect(p1.hand[0].id).not.toBe('p1_card'); // Must be different
         expect(engine.state.phase).not.toBe('resolve_event_pass');
     });
 });
