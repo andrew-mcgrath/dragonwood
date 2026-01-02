@@ -43,6 +43,10 @@ describe('GameEngine', () => {
             { id: '3', type: 'adventurer', suit: 'green', value: 3 }
         ];
 
+        // Ensure safe deck to prevent Event trigger on refill clearing config
+        engine.state.adventurerDeck = [{ id: 'safe', type: 'adventurer', suit: 'red', value: 1 } as any];
+        engine.state.discardPile = [];
+
         // Ensure phase is action
         engine.state.phase = 'action';
         engine.state.currentPlayerIndex = 0; // Ensure it's player 0's turn
@@ -101,6 +105,8 @@ describe('GameEngine', () => {
             { id: 'c3', type: 'adventurer', suit: 'red', value: 5 },
         ] as any;
 
+        engine.state.phase = 'action'; // Force action phase (avoid random event start)
+
         // 3. Execute Capture
         engine.declareCapture('dragon_1', 'dragon_spell', ['c1', 'c2', 'c3']);
 
@@ -129,6 +135,8 @@ describe('GameEngine', () => {
             { id: 'c3', type: 'adventurer', suit: 'red', value: 5 },
         ] as any;
 
+        engine.state.phase = 'action';
+
         expect(() => {
             engine.declareCapture('troll_1', 'dragon_spell', ['c1', 'c2', 'c3']);
         }).toThrow("Dragon Spell can only be used on a Dragon!");
@@ -146,6 +154,8 @@ describe('GameEngine', () => {
             { id: 'c2', type: 'adventurer', suit: 'red', value: 5 },
             { id: 'c3', type: 'adventurer', suit: 'red', value: 7 },
         ] as any;
+
+        engine.state.phase = 'action';
 
         expect(() => {
             engine.declareCapture('d1', 'dragon_spell', ['c1', 'c2', 'c3']);
@@ -234,6 +244,10 @@ describe('GameEngine', () => {
                 { id: 'x1', type: 'adventurer', suit: 'blue', value: 1 }, // Extra cards for penalty
                 { id: 'x2', type: 'adventurer', suit: 'blue', value: 2 }
             ] as any;
+
+
+
+            eng.state.phase = 'action';
 
             eng.declareCapture('d1', 'dragon_spell', ['c1', 'c2', 'c3']);
 

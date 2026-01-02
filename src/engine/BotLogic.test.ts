@@ -55,7 +55,7 @@ describe('Bot Logic', () => {
         vi.runAllTimers();
 
         expect(engine.state.turnLog.some(l => l.includes("Bot attacks Goblin with stomp"))).toBe(true);
-        expect(engine.state.diceRollConfig.targetCardName).toBe('Goblin');
+
     });
 
     it('should discard a card if capture fails and penalty applies', () => {

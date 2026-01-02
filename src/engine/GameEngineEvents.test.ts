@@ -20,6 +20,7 @@ describe('GameEngine - Events', () => {
             { id: 'a2', type: 'adventurer', suit: 'blue', value: 2 },
             { id: 'a3', type: 'adventurer', suit: 'green', value: 3 }
         ];
+        engine.state.discardPile = []; // Ensure no Ladybugs in discard trigger recursion
 
         // Mock an event card
         const sunnyDay: EventCard = {
@@ -129,4 +130,3 @@ describe('GameEngine - Events', () => {
         expect(engine.state.phase).not.toBe('resolve_event_pass');
     });
 });
-```
