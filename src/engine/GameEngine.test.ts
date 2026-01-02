@@ -251,7 +251,7 @@ describe('GameEngine', () => {
 
             eng.declareCapture('d1', 'dragon_spell', ['c1', 'c2', 'c3']);
 
-            if (eng.state.phase === 'penalty_discard') {
+            if ((eng.state.phase as string) === 'penalty_discard') {
                 failed = true;
                 expect(eng.state.penaltyCardsNeeded).toBe(2);
                 expect(eng.state.turnLog[eng.state.turnLog.length - 1]).toContain("Dragon Spell Failed! Must discard 2 cards!");
