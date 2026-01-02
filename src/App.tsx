@@ -58,6 +58,16 @@ function App() {
     refresh();
   };
 
+  const handleEventDiscard = (playerId: string, cardId: string) => {
+    gameEngine.handleEventDiscard(playerId, cardId);
+    refresh();
+  };
+
+  const handleEventPass = (playerId: string, cardId: string) => {
+    gameEngine.handleEventPass(playerId, cardId);
+    refresh();
+  };
+
   if (gameEngine instanceof Error || (gameEngine as any).phase === 'error') {
     return <div style={{ color: 'red', padding: 20 }}>
       <h1>Fatal Error</h1>
@@ -81,6 +91,8 @@ function App() {
         onDraw={handleDraw}
         onCapture={handleCapture}
         onPenaltyDiscard={handlePenaltyDiscard}
+        onEventDiscard={handleEventDiscard}
+        onEventPass={handleEventPass}
         onRenamePlayer={handleRenamePlayer}
       />
       <VersionDisplay />

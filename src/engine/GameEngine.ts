@@ -1,6 +1,6 @@
 import { createAdventurerDeck, createDragonwoodDeck } from './DeckManager';
 import { rollDice } from './Dice';
-import type { GameState, Player, PlayerCard, DragonwoodCard, AttackType } from './types';
+import type { GameState, Player, PlayerCard, AttackType, EventCard } from './types';
 import { generateRandomName } from '../utils/NameGenerator';
 
 export class GameEngine {
@@ -10,6 +10,7 @@ export class GameEngine {
 
     constructor() {
         this.state = this.initializeGame();
+        this.refillLandscape();
     }
 
     public subscribe(listener: () => void) {
@@ -25,6 +26,42 @@ export class GameEngine {
 
     public getState(): GameState {
         return this.state;
+    }
+
+    public handleEventDiscard(playerId: string, cardId: string) {
+        if (this.state.phase !== 'resolve_event_discard') return;
+
+        const player = this.state.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        // Verify pending
+        if (!this.state.pendingEventDiscards?.includes(playerId)) return;
+
+        // Discard
+        const cardIdx = player.hand.findIndex(c => c.id === cardId);
+        if (cardIdx === -1) return;
+
+        const removed = player.hand.splice(cardIdx, 1)[0];
+        this.state.discardPile.push(removed);
+
+        if (removed.type === 'adventurer') {
+            this.state.turnLog.push(`${player.name} discarded ${removed.value} ${removed.suit}.`);
+        } else {
+            this.state.turnLog.push(`${player.name} discarded a Ladybug.`);
+        }
+
+        this.notify();
+        // Update pending list
+        this.state.pendingEventDiscards = this.state.pendingEventDiscards.filter(id => id !== playerId);
+
+        // Check if all done
+        if (this.state.pendingEventDiscards.length === 0) {
+            this.state.turnLog.push("The storm clears.");
+            this.state.phase = 'action';
+            this.state.pendingEventDiscards = undefined;
+            this.refillLandscape();
+        }
+        this.notify();
     }
 
     public setPlayerName(playerId: string, newName: string) {
@@ -80,13 +117,9 @@ export class GameEngine {
             if (c) player2.hand.push(c);
         }
 
-        // Deal 5 landscape cards
-        const landscape: DragonwoodCard[] = [];
-        for (let i = 0; i < 5; i++) {
-            if (dragonwoodDeck.length > 0) {
-                landscape.push(dragonwoodDeck.pop()!);
-            }
-        }
+        // Deal 5 landscape cards (using refill logic to handle initial events if any - rare but possible)
+        // Deal 5 landscape cards (using refill logic to handle initial events if any - rare but possible)
+        // this.refillLandscape(); // Removed: Called in constructor after state init
 
         return {
             players: [player1, player2],
@@ -94,7 +127,13 @@ export class GameEngine {
             adventurerDeck,
             discardPile: tempDiscard,
             dragonwoodDeck,
-            landscape,
+            landscape: [], // Will be filled primarily by ref, but we need initial state if not partially constructed?
+            // Start fresh:
+            // We need to return state where landscape is ALREADY filled.
+            // But `initializeGame` constructs the object.
+            // I needed to capture the landscape validly.
+            // I passed `this.refillLandscape()` earlier which MUTATES `this.state.landscape` but `this.state` isn't assigned yet!
+            // CRITICAL ERROR FIX in next step.
             diceRollConfig: { count: 0, pending: false, results: [] },
             phase: 'action', // Start with action phase
             turnLog: ['Game Started'],
@@ -119,7 +158,7 @@ export class GameEngine {
         this.endTurn();
     }
 
-    private setNotification(message: string, type: 'info' | 'error' | 'success') {
+    private setNotification(message: string, type: 'info' | 'error' | 'success' | 'event') {
         this.state.latestNotification = {
             message,
             type,
@@ -399,9 +438,7 @@ export class GameEngine {
             this.state.landscape = this.state.landscape.filter(c => c.id !== cardId);
 
             // Refill landscape
-            if (this.state.dragonwoodDeck.length > 0) {
-                this.state.landscape.push(this.state.dragonwoodDeck.pop()!);
-            }
+            this.refillLandscape();
 
             // Discard played cards
             player.hand = player.hand.filter(c => !cardIdsToPlay.includes(c.id));
@@ -689,5 +726,181 @@ export class GameEngine {
             }
 
         }, 1500);
+    }
+
+    private refillLandscape() {
+        // Keep filling until we have 5 cards or deck is empty
+        while (this.state.landscape.length < 5 && this.state.dragonwoodDeck.length > 0) {
+            const card = this.state.dragonwoodDeck.pop()!;
+
+            if (card.type === 'event') {
+                this.state.turnLog.push(`Event: ${card.name}! ${card.description}`);
+                this.setNotification(`Event: ${card.name}! ${card.description}`, 'event');
+                this.resolveEvent(card);
+
+                // If event triggered a blocking state, stop refilling
+                if (this.state.phase === 'resolve_event_discard' || this.state.phase === 'resolve_event_pass') {
+                    return;
+                }
+
+                // Events are transient (discarded after use)
+                // For now, let's say they go to a "game discard" or just vanish. 
+                // Since there is no global discard for Dragonwood cards explicitly tracked in state (only player captured),
+                // we just don't add it to landscape.
+            } else {
+                this.state.landscape.push(card);
+            }
+        }
+    }
+
+    private resolveEvent(event: EventCard) {
+        // Clear any previous dice roll state to prevent UI artifacts
+        this.state.diceRollConfig = {
+            count: 0,
+            pending: false,
+            results: [],
+            success: undefined,
+            bonus: undefined,
+            total: undefined,
+            required: undefined,
+            player: undefined,
+            targetCardName: undefined
+        };
+
+        if (event.name === 'Quicksand') {
+            // Remove all enhancements in the Landscape. Replace with new cards.
+            const enhancements = this.state.landscape.filter(c => c.type === 'enhancement');
+            if (enhancements.length > 0) {
+                this.state.turnLog.push(`Quicksand swallows ${enhancements.length} enhancements!`);
+                this.state.landscape = this.state.landscape.filter(c => c.type !== 'enhancement');
+                // Refill happens by the calling loop if triggered there, but if we are IN the loop,
+                // we just removed items, so the loop will continue to fill.
+            } else {
+                this.state.turnLog.push("Quicksand found no enhancements to swallow.");
+            }
+        } else if (event.name === 'Thunder Storm') {
+            // All players must discard 1 Adventure card.
+            const pendingDiscards: string[] = [];
+
+            this.state.players.forEach(p => {
+                if (p.hand.length > 0) {
+                    if (p.isBot) {
+                        // Bot discards randomly immediately
+                        const idx = Math.floor(Math.random() * p.hand.length);
+                        const removed = p.hand.splice(idx, 1)[0];
+                        this.state.discardPile.push(removed);
+                        if (removed.type === 'adventurer') {
+                            this.state.turnLog.push(`${p.name} lost ${removed.value} ${removed.suit} to the storm!`);
+                        } else {
+                            this.state.turnLog.push(`${p.name} lost a Ladybug to the storm!`);
+                        }
+                    } else {
+                        // Human: Must choose
+                        pendingDiscards.push(p.id);
+                    }
+                }
+            });
+
+            if (pendingDiscards.length > 0) {
+                this.state.pendingEventDiscards = pendingDiscards;
+                this.state.phase = 'resolve_event_discard';
+                this.state.turnLog.push("Waiting for players to discard due to Thunder Storm...");
+                this.notify();
+                return; // Stop processing events/refill until resolved
+            }
+        } else if (event.name === 'Wind Storm') {
+            // All players pass 1 Adventurer card to the right.
+            const pendingPasses: string[] = [];
+
+            // Initialize buffer if not exists
+            this.state.eventBuffer = {};
+
+            this.state.players.forEach(p => {
+                if (p.hand.length > 0) {
+                    if (p.isBot) {
+                        // Bot chooses random card to pass
+                        const idx = Math.floor(Math.random() * p.hand.length);
+                        const cardToPass = p.hand.splice(idx, 1)[0];
+                        // Store in buffer
+                        if (this.state.eventBuffer) {
+                            this.state.eventBuffer[p.id] = cardToPass;
+                        }
+                    } else {
+                        // Human: Must choose
+                        pendingPasses.push(p.id);
+                    }
+                }
+            });
+
+            if (pendingPasses.length > 0) {
+                this.state.pendingEventPasses = pendingPasses;
+                this.state.phase = 'resolve_event_pass';
+                this.state.turnLog.push("Wind Storm! Choose a card to pass to your neighbor.");
+                this.notify();
+                return;
+            } else {
+                // All bots (or no humans with cards), resolve immediately
+                this.completeWindStormPass();
+            }
+        } else if (event.name === 'Sunny Day') {
+            // All players draw 2 cards.
+            this.state.players.forEach(p => {
+                this.state.turnLog.push(`${p.name} enjoys the sun!`);
+                this.performDraw(p);
+                this.performDraw(p);
+            });
+        }
+    }
+
+    private completeWindStormPass() {
+        // Distribute cards from buffer to neighbors
+        const players = this.state.players;
+        const buffer = this.state.eventBuffer || {};
+
+        players.forEach((p, index) => {
+            const nextIndex = (index + 1) % players.length;
+            const neighbor = players[nextIndex];
+
+            const cardFromCurrent = buffer[p.id];
+            if (cardFromCurrent) {
+                neighbor.hand.push(cardFromCurrent);
+                this.state.turnLog.push(`${p.name} passed a card to ${neighbor.name}.`);
+            }
+        });
+
+        // Clear state
+        delete this.state.eventBuffer;
+        delete this.state.pendingEventPasses;
+
+        // Resume game
+        this.state.phase = 'action';
+        this.refillLandscape();
+    }
+
+    public handleEventPass(playerId: string, cardId: string) {
+        if (this.state.phase !== 'resolve_event_pass') return;
+        if (!this.state.pendingEventPasses?.includes(playerId)) return;
+
+        const player = this.state.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        const cardIndex = player.hand.findIndex(c => c.id === cardId);
+        if (cardIndex === -1) return;
+
+        // Move card to buffer
+        const card = player.hand.splice(cardIndex, 1)[0];
+        if (!this.state.eventBuffer) this.state.eventBuffer = {};
+        this.state.eventBuffer[playerId] = card;
+
+        // Remove from pending
+        this.state.pendingEventPasses = this.state.pendingEventPasses.filter(id => id !== playerId);
+
+        // Check if all done
+        if (this.state.pendingEventPasses.length === 0) {
+            this.completeWindStormPass();
+        } else {
+            this.state.turnLog.push(`${player.name} has chosen a card to pass.`);
+            this.notify();
+        }
     }
 }
