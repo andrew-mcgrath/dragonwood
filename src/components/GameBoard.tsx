@@ -12,6 +12,8 @@ interface GameBoardProps {
     onDraw: () => void;
     onCapture: (cardId: string, attackType: AttackType, cardIdsToPlay: string[], consumablesToUse?: string[]) => void;
     onPenaltyDiscard: (cardId: string) => void;
+    onEventDiscard: (playerId: string, cardId: string) => void;
+    onEventPass: (playerId: string, cardId: string) => void;
     onRenamePlayer: (playerId: string, newName: string) => void;
 }
 
@@ -36,7 +38,7 @@ const DiceFace: React.FC<{ value: number }> = ({ value }) => {
     );
 };
 
-export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCapture, onPenaltyDiscard, onRenamePlayer: _onRenamePlayer }) => {
+export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCapture, onPenaltyDiscard, onEventDiscard, onEventPass, onRenamePlayer: _onRenamePlayer }) => {
     const player = gameState.players[gameState.currentPlayerIndex];
     const isMyTurn = !player.isBot; // Assuming index 0 is human usually, or check ID
 
@@ -46,7 +48,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     const [isLogCollapsed, setIsLogCollapsed] = useState(true);
     const [isGameOverLogExpanded, setIsGameOverLogExpanded] = useState(false);
     const [showToast, setShowToast] = useState(false);
-    const [genericToast, setGenericToast] = useState<{ message: string, visible: boolean, type: 'info' | 'error' | 'success' }>({ message: '', visible: false, type: 'info' });
+    const [genericToast, setGenericToast] = useState<{ message: string, visible: boolean, type: 'info' | 'error' | 'success' | 'event' }>({ message: '', visible: false, type: 'info' });
     const selectedLandscapeCard = gameState.landscape.find(c => c.id === selectedLandscapeCardId);
 
     // Ref for the log container
@@ -145,6 +147,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
     const getToastBackground = () => {
         if (genericToast.visible) {
             if (genericToast.type === 'error') return 'linear-gradient(135deg, rgba(192, 57, 43, 0.95), rgba(231, 76, 60, 0.95))';
+            if (genericToast.type === 'event') return 'linear-gradient(135deg, rgba(230, 126, 34, 0.9), rgba(243, 156, 18, 0.9))'; // Orange for Events
             return 'linear-gradient(135deg, rgba(52, 73, 94, 0.9), rgba(44, 62, 80, 0.9))';
         }
         if (gameState.diceRollConfig.success === true) return 'linear-gradient(135deg, rgba(46, 204, 113, 0.6), rgba(39, 174, 96, 0.6))';
@@ -155,24 +158,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
 
 
-    const handleDiscard = () => {
-        if (selectedHandCards.length === 0) {
-            setGenericToast({ message: "⚠️ Select a card to discard!", visible: true, type: 'error' });
-            return;
-        }
-        if (selectedHandCards.length > 1) {
-            setGenericToast({ message: "⚠️ Select ONLY 1 card!", visible: true, type: 'error' });
-            return;
-        }
-        if (selectedHandCards.length === 1) {
-            try {
-                onPenaltyDiscard(selectedHandCards[0]);
-                setSelectedHandCards([]);
-            } catch (err: any) {
-                setGenericToast({ message: `⚠️ ${err.message}`, visible: true, type: 'error' });
-            }
-        }
-    };
+
+
+
+
 
     const handleAction = (type: AttackType) => {
         if (selectedLandscapeCardId) {
@@ -200,73 +189,75 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
         onDraw();
     };
 
-
-
     return (
         <div style={{ padding: '20px', width: '100%', maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
 
             {/* Header: Scores / Turn Info */}
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '15px 20px', borderRadius: '15px' }}>
+            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', background: 'rgba(0,0,0,0.2)', padding: '15px 20px', borderRadius: '15px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <h2 style={{ margin: 0, textShadow: '2px 2px 4px rgba(0,0,0,0.5)', fontSize: '2em' }}>🐉 Dragonwood 🌲</h2>
-                    <div style={{ padding: '5px 15px', background: isMyTurn ? 'linear-gradient(135deg, rgba(46, 204, 113, 0.6), rgba(39, 174, 96, 0.6))' : 'linear-gradient(135deg, rgba(127, 140, 141, 0.6), rgba(52, 73, 94, 0.6))', borderRadius: '20px', fontWeight: 'bold' }}>
-                        {isMyTurn ? "YOUR TURN" : (player.isBot ? "BOT'S TURN" : `${player.name}'s TURN`)}
-                    </div>
+                    <h2 style={{ margin: 0, textShadow: '2px 2px 4px rgba(0,0,0,0.5)', fontSize: '3em' }}>🐉 Dragonwood 🌲</h2>
                 </div>
 
-                <div style={{ display: 'flex', gap: '15px' }}>
-                    {gameState.players.map(p => {
-                        const score = p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0);
-                        const isActive = p.id === player.id;
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    {(() => {
+                        const maxNameLength = Math.max(...gameState.players.map(p => p.name.length));
+                        // Base width + char width approximation. 
+                        // 120px base + (maxLen * 10px) roughly covers it.
+                        const boxWidth = Math.max(140, 100 + (maxNameLength * 12)) + 'px';
 
-                        // Create detailed tooltip
-                        const capturedTooltip = p.capturedCards.length > 0
-                            ? `Captured Cards (${p.capturedCards.length}):\n${p.capturedCards.map(c => `• ${c.name}`).join('\n')}`
-                            : "No cards captured";
+                        return gameState.players.map(p => {
+                            const score = p.capturedCards.reduce((acc, c) => acc + ('victoryPoints' in c ? (c as any).victoryPoints : 0), 0);
+                            const isActive = p.id === player.id;
 
-                        // Calculate bonuses for display
-                        const hasCloakOfDarkness = p.capturedCards.some(c => c.name === 'Cloak of Darkness');
-                        const hasMagicalUnicorn = p.capturedCards.some(c => c.name === 'Magical Unicorn');
-                        const bonuses = {
-                            strike: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0),
-                            stomp: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Boots' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0),
-                            scream: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Ghost Disguise' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0),
-                        };
-                        const hasHoneyPot = p.capturedCards.some(c => c.name === 'Honey Pot');
+                            // Create detailed tooltip
+                            const capturedTooltip = p.capturedCards.length > 0
+                                ? `Captured Cards (${p.capturedCards.length}):\n${p.capturedCards.map(c => `• ${c.name}`).join('\n')}`
+                                : "No cards captured";
 
-                        return (
-                            <div key={p.id}
-                                title={capturedTooltip}
-                                style={{
-                                    padding: '10px 15px',
-                                    background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
-                                    borderRadius: '10px',
-                                    border: isActive ? '2px solid #f1c40f' : '1px solid transparent',
-                                    display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px',
-                                    minWidth: '120px',
-                                    cursor: 'help'
-                                }}>
-                                <div
-                                    style={{ fontWeight: 'bold', fontSize: '1.2em', marginBottom: '5px', color: '#ecf0f1' }}
-                                >
-                                    {p.name} {p.isBot ? '🤖' : '👤'}
+                            // Calculate bonuses for display
+                            const hasCloakOfDarkness = p.capturedCards.some(c => c.name === 'Cloak of Darkness');
+                            const hasMagicalUnicorn = p.capturedCards.some(c => c.name === 'Magical Unicorn');
+                            const bonuses = {
+                                strike: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Silver Sword' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0),
+                                stomp: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Magical Boots' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0),
+                                scream: p.capturedCards.reduce((acc, c) => acc + (c.name === 'Ghost Disguise' ? 2 : 0), 0) + (hasCloakOfDarkness ? 2 : 0) + (hasMagicalUnicorn ? 1 : 0),
+                            };
+                            const hasHoneyPot = p.capturedCards.some(c => c.name === 'Honey Pot');
+
+                            return (
+                                <div key={p.id}
+                                    title={capturedTooltip}
+                                    style={{
+                                        padding: '10px 15px',
+                                        background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+                                        borderRadius: '10px',
+                                        border: isActive ? '2px solid #f1c40f' : '1px solid transparent',
+                                        display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px',
+                                        minWidth: boxWidth,
+                                        width: boxWidth, // Enforce equality
+                                        cursor: 'help'
+                                    }}>
+                                    <div
+                                        style={{ fontWeight: 'bold', fontSize: '1.2em', marginBottom: '5px', color: '#ecf0f1' }}
+                                    >
+                                        {p.name} {p.isBot ? '🤖' : '👤'}
+                                    </div>
+                                    <div style={{ fontSize: '1.2em', color: '#f1c40f' }}>🏆 {score} VP</div>
+                                    <div style={{ fontSize: '0.8em', display: 'flex', gap: '5px' }}>
+                                        {bonuses.strike > 0 && <span title="Strike Bonus">⚔️+{bonuses.strike}</span>}
+                                        {bonuses.stomp > 0 && <span title="Stomp Bonus">🦶+{bonuses.stomp}</span>}
+                                        {bonuses.scream > 0 && <span title="Scream Bonus">😱+{bonuses.scream}</span>}
+                                        {hasHoneyPot && <span title="Re-roll 1s">🍯</span>}
+                                    </div>
+                                    <div style={{ fontSize: '0.8em', maxWidth: '200px', textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.7 }}>
+                                        Captured: {p.capturedCards.map(c => c.name).join(', ') || 'None'}
+                                    </div>
                                 </div>
-                                <div style={{ fontSize: '1.2em', color: '#f1c40f' }}>🏆 {score} VP</div>
-                                <div style={{ fontSize: '0.8em', display: 'flex', gap: '5px' }}>
-                                    {bonuses.strike > 0 && <span title="Strike Bonus">⚔️+{bonuses.strike}</span>}
-                                    {bonuses.stomp > 0 && <span title="Stomp Bonus">🦶+{bonuses.stomp}</span>}
-                                    {bonuses.scream > 0 && <span title="Scream Bonus">😱+{bonuses.scream}</span>}
-                                    {hasHoneyPot && <span title="Re-roll 1s">🍯</span>}
-                                </div>
-                                <div style={{ fontSize: '0.8em', maxWidth: '200px', textAlign: 'right', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 0.7 }}>
-                                    Captured: {p.capturedCards.map(c => c.name).join(', ') || 'None'}
-                                </div>
-                            </div>
-                        );
-                    })}
+                            );
+                        });
+                    })()}
                 </div>
             </header>
-
 
             {/* Landscape Area */}
             <section>
@@ -280,6 +271,41 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                     background: 'linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.1))',
                     borderRadius: '8px'
                 }}>
+                    {gameState.dragonwoodDeck.length > 0 && (
+                        <div style={{
+                            width: 'var(--card-width)',
+                            height: 'var(--card-height)',
+                            backgroundImage: 'url(/dragonwood_card_back.png)',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            borderRadius: 'var(--card-radius)',
+                            border: '2px solid #2e7d32',
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.5)',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            textShadow: '2px 2px 4px black',
+                            color: '#ecf0f1',
+                            fontWeight: 'bold',
+                            position: 'relative',
+                            userSelect: 'none',
+                            marginRight: '30px'
+                        }}>
+                            <div style={{ zIndex: 2, textAlign: 'center' }}>
+                                <div style={{ fontSize: '1.2em', marginBottom: '5px' }}>Cards Left</div>
+                                <div style={{ fontSize: '2em', color: '#f1c40f' }}>{gameState.dragonwoodDeck.length}</div>
+                            </div>
+                            <div style={{
+                                marginTop: '10px',
+                                padding: '5px 10px',
+                                background: 'rgba(0,0,0,0.6)',
+                                borderRadius: '10px',
+                                fontSize: '0.8em',
+                                display: 'flex', alignItems: 'center', gap: '5px'
+                            }}>
+                                <span>🔄</span>
+                                <span style={{ color: '#e67e22', fontSize: '1.2em' }}>{3 - gameState.deckCycles}</span>
+                            </div>
+                        </div>
+                    )}
                     {gameState.landscape.map(card => (
                         <CardComponent
                             key={card.id}
@@ -292,15 +318,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                             }}
                         />
                     ))}
-                    {gameState.dragonwoodDeck.length > 0 && (
-                        <div className="card" style={{ background: '#2c3e50', border: '2px dashed #7f8c8d' }}>
-                            <div>Dragonwood</div>
-                            <div>Deck</div>
-                            <div>({gameState.dragonwoodDeck.length})</div>
-                        </div>
-                    )}
                 </div>
-            </section>
+            </section >
 
 
 
@@ -327,7 +346,15 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                 key={card.id}
                                 card={card}
                                 isSelected={isConsumable ? selectedConsumables.includes(card.id) : selectedHandCards.includes(card.id)}
-                                onClick={() => isConsumable ? toggleConsumable(card.id) : toggleHandCard(card.id)}
+                                onClick={() => {
+                                    if (gameState.phase === 'resolve_event_discard' && gameState.pendingEventDiscards?.includes(player.id)) {
+                                        onEventDiscard(player.id, card.id);
+                                    } else if (gameState.phase === 'resolve_event_pass' && gameState.pendingEventPasses?.includes(player.id)) {
+                                        onEventPass(player.id, card.id);
+                                    } else {
+                                        isConsumable ? toggleConsumable(card.id) : toggleHandCard(card.id);
+                                    }
+                                }}
                             />
                         );
                     })}
@@ -341,11 +368,38 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
                                 Capture Failed! Select {gameState.penaltyCardsNeeded || 1} card{(gameState.penaltyCardsNeeded || 1) > 1 ? 's' : ''} to discard:
                             </span>
                             <button
-                                onClick={handleDiscard}
-                                style={{ background: 'linear-gradient(135deg, #e74c3c, #c0392b)', color: 'white' }}
+                                style={{
+                                    padding: '5px 10px',
+                                    borderRadius: '5px',
+                                    border: 'none',
+                                    background: '#c0392b', // Red
+                                    color: 'white',
+                                    cursor: 'pointer'
+                                }}
+                                onClick={() => {
+                                    if (selectedHandCards.length > 0) {
+                                        // Handle single or multiple?
+                                        // onPenaltyDiscard currently defined as (cardId: string) => void in GameBoardProps
+                                        // But we might want to discard all selected.
+                                        selectedHandCards.forEach(id => onPenaltyDiscard(id));
+                                        setSelectedHandCards([]);
+                                    }
+                                }}
                             >
-                                🗑️ Discard Selected
+                                Discard Selected
                             </button>
+                        </div>
+                    ) : gameState.phase === 'resolve_event_discard' && gameState.pendingEventDiscards?.includes(player.id) ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ color: '#e67e22', fontWeight: 'bold' }}>
+                                Thunder Storm! Click a card to discard it immediately.
+                            </span>
+                        </div>
+                    ) : gameState.phase === 'resolve_event_pass' && gameState.pendingEventPasses?.includes(player.id) ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <span style={{ color: '#3498db', fontWeight: 'bold' }}>
+                                Wind Storm! Select a card to pass to your neighbor.
+                            </span>
                         </div>
                     ) : gameState.phase === 'game_over' ? (
                         <div style={{ fontWeight: 'bold', color: '#f1c40f' }}>GAME OVER</div>
@@ -588,96 +642,98 @@ export const GameBoard: React.FC<GameBoardProps> = ({ gameState, onDraw, onCaptu
 
 
             {/* Toast Notification for Dice Rolls */}
-            {((showToast && (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0)) || genericToast.visible) && (
-                <div style={{
-                    position: 'fixed',
-                    bottom: '20px',
-                    right: '20px',
-                    width: 'auto',
-                    maxWidth: '300px',
-                    minWidth: '250px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '15px',
-                    background: getToastBackground(),
-                    backdropFilter: 'blur(4px)',
-                    borderRadius: '12px',
-                    color: 'white',
-                    boxShadow: '0 5px 15px rgba(0,0,0,0.2)',
-                    zIndex: 2000,
-                    animation: 'slideInRight 0.3s ease-out'
-                }}>
-                    <button
-                        onClick={() => setShowToast(false)}
-                        style={{
-                            position: 'absolute',
-                            top: '5px',
-                            right: '5px',
-                            background: 'rgba(0,0,0,0.15)',
-                            border: 'none',
-                            color: 'white',
-                            borderRadius: '50%',
-                            width: '20px',
-                            height: '20px',
-                            cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontWeight: 'bold',
-                            fontSize: '0.8em',
-                            padding: 0
-                        }}
-                    >✕</button>
+            {
+                ((showToast && (gameState.diceRollConfig.pending || gameState.diceRollConfig.results.length > 0)) || genericToast.visible) && (
+                    <div style={{
+                        position: 'fixed',
+                        bottom: '20px',
+                        right: '20px',
+                        width: 'auto',
+                        maxWidth: '300px',
+                        minWidth: '250px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '15px',
+                        background: getToastBackground(),
+                        backdropFilter: 'blur(4px)',
+                        borderRadius: '12px',
+                        color: 'white',
+                        boxShadow: '0 5px 15px rgba(0,0,0,0.2)',
+                        zIndex: 2000,
+                        animation: 'slideInRight 0.3s ease-out'
+                    }}>
+                        <button
+                            onClick={() => setShowToast(false)}
+                            style={{
+                                position: 'absolute',
+                                top: '5px',
+                                right: '5px',
+                                background: 'rgba(0,0,0,0.15)',
+                                border: 'none',
+                                color: 'white',
+                                borderRadius: '50%',
+                                width: '20px',
+                                height: '20px',
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontWeight: 'bold',
+                                fontSize: '0.8em',
+                                padding: 0
+                            }}
+                        >✕</button>
 
-                    <h3 style={{ margin: '0 0 8px 0', fontSize: '1em', textAlign: 'center', paddingRight: '15px' }}>
-                        {genericToast.visible ? (
-                            genericToast.message
-                        ) : (
+                        <h3 style={{ margin: '0 0 8px 0', fontSize: '1em', textAlign: 'center', paddingRight: '15px' }}>
+                            {genericToast.visible ? (
+                                genericToast.message
+                            ) : (
+                                <>
+                                    {gameState.diceRollConfig.player ?
+                                        `${gameState.diceRollConfig.player.name} ${gameState.diceRollConfig.player.isBot ? '🤖' : '👤'} `
+                                        : ''}
+                                    {gameState.diceRollConfig.targetCardName ? `vs ${gameState.diceRollConfig.targetCardName}: ` : ''}
+                                    {gameState.diceRollConfig.pending ? 'Rolling...' : (gameState.diceRollConfig.success === true ? 'Success!' : (gameState.diceRollConfig.success === false ? 'Failed!' : (gameState.diceRollConfig.results.length > 0 ? 'Roll Result' : 'Ready to Roll')))}
+                                </>
+                            )}
+                        </h3>
+                        {showToast && gameState.diceRollConfig.results.length > 0 && (
                             <>
-                                {gameState.diceRollConfig.player ?
-                                    `${gameState.diceRollConfig.player.name} ${gameState.diceRollConfig.player.isBot ? '🤖' : '👤'} `
-                                    : ''}
-                                {gameState.diceRollConfig.targetCardName ? `vs ${gameState.diceRollConfig.targetCardName}: ` : ''}
-                                {gameState.diceRollConfig.pending ? 'Rolling...' : (gameState.diceRollConfig.success === true ? 'Success!' : (gameState.diceRollConfig.success === false ? 'Failed!' : (gameState.diceRollConfig.results.length > 0 ? 'Roll Result' : 'Ready to Roll')))}
+                                <div style={{ display: 'flex', gap: '5px', marginBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                    {gameState.diceRollConfig.results.map((val, i) => (
+                                        <div key={i} style={{ transform: 'scale(0.8)' }}>
+                                            <DiceFace value={val} />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div style={{ fontSize: '1.2em', fontWeight: 'bold' }}>
+                                    Total: {gameState.diceRollConfig.total ?? gameState.diceRollConfig.results.reduce((a, b) => a + b, 0)}
+                                    {gameState.diceRollConfig.bonus ? <span style={{ fontSize: '0.7em', color: '#f1c40f', marginLeft: '3px' }}>(+{gameState.diceRollConfig.bonus})</span> : ''}
+                                </div>
                             </>
                         )}
-                    </h3>
-                    {showToast && gameState.diceRollConfig.results.length > 0 && (
-                        <>
-                            <div style={{ display: 'flex', gap: '5px', marginBottom: '5px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                                {gameState.diceRollConfig.results.map((val, i) => (
-                                    <div key={i} style={{ transform: 'scale(0.8)' }}>
-                                        <DiceFace value={val} />
-                                    </div>
-                                ))}
+                        {showToast && gameState.diceRollConfig.required !== undefined && (
+                            <div style={{ fontSize: '0.9em', marginTop: '2px', opacity: 0.9 }}>
+                                Needed: {gameState.diceRollConfig.required}
                             </div>
-                            <div style={{ fontSize: '1.2em', fontWeight: 'bold' }}>
-                                Total: {gameState.diceRollConfig.total ?? gameState.diceRollConfig.results.reduce((a, b) => a + b, 0)}
-                                {gameState.diceRollConfig.bonus ? <span style={{ fontSize: '0.7em', color: '#f1c40f', marginLeft: '3px' }}>(+{gameState.diceRollConfig.bonus})</span> : ''}
-                            </div>
-                        </>
-                    )}
-                    {showToast && gameState.diceRollConfig.required !== undefined && (
-                        <div style={{ fontSize: '0.9em', marginTop: '2px', opacity: 0.9 }}>
-                            Needed: {gameState.diceRollConfig.required}
-                        </div>
-                    )}
+                        )}
 
-                    {/* Visual Timer Line */}
-                    {((!gameState.diceRollConfig.pending && gameState.diceRollConfig.results.length > 0) || genericToast.visible) && (
-                        <div style={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            height: '4px',
-                            backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                            width: '100%',
-                            borderBottomLeftRadius: '12px',
-                            animation: 'shrinkWidth 5s linear forwards'
-                        }} />
-                    )}
-                </div>
-            )}
+                        {/* Visual Timer Line */}
+                        {((!gameState.diceRollConfig.pending && gameState.diceRollConfig.results.length > 0) || genericToast.visible) && (
+                            <div style={{
+                                position: 'absolute',
+                                bottom: 0,
+                                left: 0,
+                                height: '4px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                                width: '100%',
+                                borderBottomLeftRadius: '12px',
+                                animation: 'shrinkWidth 5s linear forwards'
+                            }} />
+                        )}
+                    </div>
+                )
+            }
 
             {/* Game Over Overlay */}
             {

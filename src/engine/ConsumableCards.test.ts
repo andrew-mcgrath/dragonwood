@@ -78,12 +78,17 @@ describe('ConsumableCards', () => {
         engine.state.landscape = [{ id: 'c1', name: 'T', type: 'creature', captureCost: { strike: 1 } } as any];
         player.hand = [{ id: 'h1', type: 'adventurer', suit: 'red', value: 1 }] as any; // 1 Card = 1 Die
 
+        // Ensure deck is safe to prevent Event trigger during refill clearing dice config
+        engine.state.adventurerDeck = [{ id: 'safe', type: 'adventurer', suit: 'red', value: 1 } as any];
+        engine.state.discardPile = [];
+
         engine.state.phase = 'action';
         engine.declareCapture('c1', 'strike', ['h1'], ['fb1']);
 
-        // Check dice count
-        // 1 Base + 1 Bonus = 2 Dice
-        expect(engine.state.diceRollConfig.count).toBe(2);
+        // Check dice count via logs (config is cleared on turn end)
+        const rollLog = engine.state.turnLog.find(l => l.includes('rolled')) || '';
+        const rolledNumbers = rollLog.match(/rolled ([\d, ]+)/)?.[1].split(',') || [];
+        expect(rolledNumbers.length).toBe(2);
 
         // Should be consumed
         expect(player.capturedCards.find(c => c.id === 'fb1')).toBeUndefined();
@@ -93,6 +98,7 @@ describe('ConsumableCards', () => {
         const player = engine.state.players[0];
         engine.state.landscape = [{ id: 'c1', name: 'T', type: 'creature', captureCost: { strike: 1 } } as any];
         player.hand = [{ id: 'h1', type: 'adventurer', suit: 'red', value: 1 }] as any;
+        engine.state.phase = 'action';
 
         expect(() => {
             engine.declareCapture('c1', 'strike', ['h1'], ['missing_card_id']);
@@ -107,6 +113,7 @@ describe('ConsumableCards', () => {
 
         engine.state.landscape = [{ id: 'c1', name: 'T', type: 'creature', captureCost: { strike: 1 } } as any];
         player.hand = [{ id: 'h1', type: 'adventurer', suit: 'red', value: 1 }] as any;
+        engine.state.phase = 'action';
 
         expect(() => {
             engine.declareCapture('c1', 'strike', ['h1'], ['ss1']);

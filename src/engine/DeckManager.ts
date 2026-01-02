@@ -1,4 +1,4 @@
-import type { Creature, DragonwoodCard, Enhancement, PlayerCard, Suit } from './types';
+import type { Creature, DragonwoodCard, Enhancement, EventCard, PlayerCard, Suit } from './types';
 
 // Constants
 const SUITS: Suit[] = ['red', 'orange', 'purple', 'green', 'blue'];
@@ -80,6 +80,13 @@ const ENHANCEMENTS_DATA: Omit<Enhancement, 'id' | 'type'>[] = [
     { name: 'Friendly Bunny', effectDescription: 'Use only once to roll 1 extra die in a capture attempt', victoryPoints: 0, captureCost: { strike: 4, stomp: 4, scream: 4 }, image: 'friendly_bunny' },
 ];
 
+const EVENTS_DATA: Omit<EventCard, 'id' | 'type'>[] = [
+    { name: 'Quicksand', description: 'Remove all enhancements in the Landscape. Replace with new cards.' },
+    { name: 'Thunder Storm', description: 'All players must discard 1 Adventure card.' },
+    { name: 'Wind Storm', description: 'All players pass 1 Adventurer card to the right.' },
+    { name: 'Sunny Day', description: 'All players draw 2 cards.' },
+];
+
 export function createDragonwoodDeck(): DragonwoodCard[] {
     const deck: DragonwoodCard[] = [];
     const dragonCards: DragonwoodCard[] = [];
@@ -106,6 +113,10 @@ export function createDragonwoodDeck(): DragonwoodCard[] {
 
     ENHANCEMENTS_DATA.forEach((e, idx) => {
         deck.push({ ...e, id: `enhancement_${idx}`, type: 'enhancement' } as DragonwoodCard);
+    });
+
+    EVENTS_DATA.forEach((e, idx) => {
+        deck.push({ ...e, id: `event_${idx}`, type: 'event' } as DragonwoodCard);
     });
 
     // 1. Shuffle all non-dragon cards

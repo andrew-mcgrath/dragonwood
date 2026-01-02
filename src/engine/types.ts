@@ -66,7 +66,7 @@ export interface Player {
   isBot: boolean;
 }
 
-export type GamePhase = 'draw' | 'action' | 'capture_attempt' | 'penalty_discard' | 'end_turn' | 'game_over';
+export type GamePhase = 'draw' | 'action' | 'capture_attempt' | 'penalty_discard' | 'end_turn' | 'game_over' | 'resolve_event_discard' | 'resolve_event_pass';
 
 export interface GameState {
   players: Player[];
@@ -91,10 +91,12 @@ export interface GameState {
   deckCycles: number;
   finalTurnsLeft?: number;
   penaltyCardsNeeded?: number; // Track how many cards to discard
+  pendingEventDiscards?: string[]; // List of player IDs pending discard
+  pendingEventPasses?: string[]; // List of players who need to pass a card
+  eventBuffer?: { [playerId: string]: PlayerCard }; // Store cards being passed: { [sourcePlayerId]: card }
   latestNotification: {
     message: string;
-    type: 'info' | 'error' | 'success';
+    type: 'info' | 'error' | 'success' | 'event';
     id: number; // Simple counter to force updates
   } | null;
 }
-
